@@ -1,29 +1,5 @@
-Here's the updated email with your additional information incorporated professionally:
+Hey Ellie,
 
-Subject: Seeking Guidance on Software Automation and Licensing Concerns
+  This is just a time for us to discuss what applications I’ll need permissions for and to see what the other developers generally have access to for development and I can verify if I’ll need that as well. It might take a little bit of time to go through their permissions and verify everything I need and don’t require. 
 
-Dear Colleagues,
-
-I hope this email finds you well. I am writing to address an important matter regarding our current software automation practices and potential licensing implications.
-
-We are experiencing technical difficulties with two of our automated processes that interact with Paragon Patient Management and Paragon Medical Records. Both applications occasionally become unresponsive during unattended operations, despite our attempts to mitigate the issue by implementing time delays between actions.
-
-Our primary concern is whether discussing these automation-related issues with Altera support could potentially violate any end-user licensing agreements we have with them. We seek your guidance on whether it would be advisable to omit any mention of automation tools, such as UIPath, when submitting support tickets to Altera.
-
-For your reference, here are the specific issues we are encountering:
-
-1. Process: AgencyProcessing-Notes_MEDASSIST_MC
-   Issue: Paragon Patient Management becomes unresponsive when attempting to access a specific network location for importing "Agency Credit Notes" from the host machine. This import feature appears to cause the application to hang on seemingly random records.
-
-2. Process: Paragon-MedicalRecords-DocSummary-Bot2
-   Issue: Paragon Medical Records becomes unresponsive when accessing the "Variable Data" tab after opening a visit ID. This occurs unpredictably on certain patient records, while others process without incident.
-
-In an effort to resolve these issues, I have also initiated support tickets directly with UIPath. However, I am uncertain whether they will be able to fully address the problem if it is indeed related to how Paragon handles these automated interactions. Given the nature of the issues, it appears that we will likely need to engage Altera support directly to resolve these concerns.
-
-Your input on how to proceed with these matters would be greatly appreciated, particularly regarding the approach we should take when communicating with Altera. If you require any additional information, please don't hesitate to ask.
-
-Thank you for your time and consideration.
-
-Best regards,
-[Your Name]
-[Your Title]
+Then I can write the official email listing everything and CC Garret and Cody requesting access from you directly so you will have an official request for this and no one gets into any trouble as I have already generally discussed this with both Cody and Garret. 
