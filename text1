@@ -8,6 +8,9 @@
 -- Payor Class              Cod_dtl_int_id = 119 Cod_dtl_int_id = 21797  Workers Comp
 -- Payor Class              Cod_dtl_int_id = 119 Cod_dtl_int_id = 21798  Litigation
 
+paragon.dbo.TPB200_BILLING_INVOICE.svc_from_dt
+paragon.dbo.TPB200_BILLING_INVOICE.svc_thru_dt
+
 SELECT 
                              BINV.ivo_ext_id AS Invoice_ID,
                              IP1.certificate_no AS Coverage_ID_1, /* certificate no by primary seconday etc */
