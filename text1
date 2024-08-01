@@ -1,68 +1,84 @@
-## FinThrive: Risk Assessment & Concerns
+-- Agent Codes              cod_hdr_int_id = 320 Cod_dtl_int_id = 40456  HBCS
+-- Visit Status             cod_hdr_int_id = 87         Cod_dtl_int_id = 5195       Billed
+-- Financial Class          cod_hdr_int_id = 24
+-- Payor Class              Cod_dtl_int_id = 119 Cod_dtl_int_id = 25467  Self Pay
+-- Payor Class              Cod_dtl_int_id = 119 Cod_dtl_int_id = 21786  Medicaid Outreach
+-- Payor Class              Cod_dtl_int_id = 119 Cod_dtl_int_id = 21607  Hospice
+-- Payor Class              Cod_dtl_int_id = 119 Cod_dtl_int_id = 21792  Private Pay
+-- Payor Class              Cod_dtl_int_id = 119 Cod_dtl_int_id = 21797  Workers Comp
+-- Payor Class              Cod_dtl_int_id = 119 Cod_dtl_int_id = 21798  Litigation
 
-### Historical Legal Issues
-
-* **MedAssets (pre-merger):** Settled multiple class-action lawsuits alleging systematic overcharging of hospitals through upcoding, unbundling, and improper billing practices (settled before 2009). (Source: Wikipedia - MedAssets [[https://en.wikipedia.org/wiki/MedAssets](https://en.wikipedia.org/wiki/MedAssets)])
-* **Precyse Solutions (pre-merger):** Faced numerous lawsuits alleging employment discrimination based on age, race, disability, gender, etc., with claims of wrongful termination, harassment, and failure to accommodate (various dates, pre-2009). (Source: Court records and legal databases like LexisNexis and Pacer)
-* **Adreima (post-acquisition by nThrive):** Settled a class-action lawsuit alleging violations of the Fair Debt Collection Practices Act (FDCPA), including harassment and false threats in debt collection practices (settled in 2020). (Source: Law360 article: "nThrive Unit To Pay $1.25M To End Debt Collection Suit" [https://www.law360.com/articles/1834196/mid-2024-fca-enforcement-and-litigation-trends-to-watch](https://www.law360.com/articles/1834196/mid-2024-fca-enforcement-and-litigation-trends-to-watch))
-
-### Financial Concerns
-
-* **Debt-Financed Acquisition (2021):**
-    * Clearlake Capital Group, a private equity firm known for leveraged buyouts, acquired nThrive's technology division (now FinThrive) using a significant amount of debt financing. (Source: FinThrive Press Release: "Clearlake Capital Completes Acquisition of nThrive's Technology Division" [https://www.prnewswire.com/news-releases/clearlake-capital-completes-acquisition-of-nthrives-technology-division-301217014.html](https://www.prnewswire.com/news-releases/clearlake-capital-completes-acquisition-of-nthrives-technology-division-301217014.html))
-    * High Debt Burden: This debt burden could pressure FinThrive to prioritize short-term profitability over long-term investments in product development, customer service, and employee retention.
-    * Potential Impacts: The high debt could necessitate cost-cutting measures like layoffs, reduced research and development spending, and potentially a decline in product or service quality. 
-    * Evidence of Pressure: The layoffs at FinThrive in 2019 and 2023, shortly after Clearlake's acquisition, and negative employee reviews on Glassdoor citing concerns about job security and company direction, could be indicative of this pressure to cut costs and maximize short-term profits. (Source: TheLayoff.com, Glassdoor)
-
-### Operational Challenges
-
-* **Implementation & Integration Issues:**
-    * Customer reviews on KLAS Research and Gartner Peer Insights frequently cite complex, time-consuming implementations and difficulties integrating FinThrive's products with existing hospital systems. This could lead to delays in realizing the benefits of the software, additional costs, and disruptions to workflows. (Source: KLAS Research, Gartner Peer Insights)
-    * Lack of sufficient resources and comprehensive documentation during integration can further exacerbate these challenges. (Source: KLAS Research, Gartner Peer Insights)
-
-* **Technical Issues & Support:**
-    * Reviews indicate ongoing problems with bugs, glitches, and system downtime, impacting productivity and potentially patient care. (Source: KLAS Research, Gartner Peer Insights)
-    * Many customers report slow response times from support, difficulty reaching live assistance, and a lack of expertise in resolving complex technical issues. (Source: KLAS Research, Gartner Peer Insights)
-    * Concerns have been raised about the effectiveness of the escalation process and the lack of proactive communication from support staff. (Source: KLAS Research)
-
-### Outsourcing Concerns:
-
-* **FinThrive's Outsourcing Practices:**
-    * Evidence suggests FinThrive outsources tasks like medical coding, billing, and claims processing, potentially to offshore locations. (Source: Job postings, industry reports)
-    * This raises concerns about data security, accuracy, and communication challenges with offshore teams.
-
-* **CEO's Strong Support for Outsourcing:**
-    * Recently new president and CEO, Hemant Goel, is a vocal advocate for outsourcing in healthcare, emphasizing cost reduction as a key benefit.
-    * In interviews and public statements, he has highlighted the potential of outsourcing to streamline operations and improve efficiency.
-    * This focus on cost reduction raises concerns that quality and customer service may be compromised in favor of financial gains.
-
-* **Potential Negative Impact on Service Quality:**
-    * Outsourcing sensitive tasks like medical billing and coding can lead to errors due to language barriers, cultural differences, and potentially less experienced staff at outsourcing providers.
-    * Existing customer reviews on Glassdoor and KLAS Research mention issues with FinThrive's customer service, including slow response times, lack of expertise, and difficulty resolving complex issues. Outsourcing could exacerbate these problems due to increased communication barriers and less control over the outsourced workforce.
-
-* **Increased Risk for Hospitals:**
-    * Hospitals relying on FinThrive's services may face increased risks of billing errors, compliance issues, and data breaches if the company's outsourcing practices are not adequately managed.
-    * It's crucial to thoroughly vet FinThrive's outsourcing vendors, data security protocols, and quality control measures to mitigate these risks.
-    * Job postings and industry reports suggest FinThrive outsources tasks like medical coding, technical support, custom software development, billing, and claims processing, to potentially offshore locations.
-    * Concerns include data security risks, potential for errors in coding and billing, communication challenges with offshore teams, and negative reviews of nThrive Global Solutions (the company's former name for their outsourcing arm). (Source: KLAS Research, Glassdoor)
-
-### Employee Morale & Layoffs
-
-* **Significant Layoffs (2019, 2023):** Two rounds of layoffs following Clearlake's acquisition have led to employee concerns about job security and company stability. (Source: TheLayoff.com, Glassdoor)
-* **Negative Employee Reviews:** Glassdoor reviews reveal low morale, lack of trust in leadership, and concerns about the company's direction under new ownership. This could impact innovation, product quality, and customer service in the long term. (Source: Glassdoor)
-
-### Private Equity Ownership Concerns
-
-* **Clearlake Capital Group's Priorities:**
-    * As a private equity firm, Clearlake's primary goal is to maximize returns for its investors. This could lead to decisions that prioritize short-term financial gains over long-term sustainability, employee well-being, or customer satisfaction.
-* **Exit Strategy:** Clearlake may seek a quick exit (IPO or sale), potentially disrupting FinThrive's operations and long-term vision. 
-    * Source: This is based on the common understanding of private equity investment strategies and their typical timeline for exiting investments.
-
-### Additional Red Flags
-
-* **Limited Financial Transparency:** FinThrive's financial health and stability are not publicly disclosed, making it difficult to assess the company's long-term viability independently.
-* **Lack of Public Statements Addressing Concerns:** FinThrive has not publicly addressed the concerns raised in employee reviews and industry reports, raising questions about their commitment to transparency and accountability. (This can be inferred from the lack of official statements or responses to these criticisms on their website or in the media.)
-
-### Conclusion
-
-The above concerns, supported by various sources, warrant a thorough and cautious evaluation before entering into a deeper partnership with FinThrive. This report is based on publicly available information and should be considered alongside any additional due diligence and direct communication with FinThrive.
+SELECT 
+                             BINV.ivo_ext_id AS Invoice_ID,
+                             IP1.certificate_no AS Coverage_ID_1, /* certificate no by primary seconday etc */
+                             IP2.certificate_no AS Coverage_ID_2,
+                             IP3.certificate_no AS Coverage_ID_3,
+                             PP1.plan_ext_id AS Plan_Code1,
+                             PP1.pyr_cls_cd AS Payor_Class_1,
+                             PP1.fin_cls_cd AS Financial_Class_1,
+                             PP2.plan_ext_id AS Plan_Code2,
+                             PP2.pyr_cls_cd AS Payor_Class_2,
+                             PP2.fin_cls_cd AS Financial_Class_2,
+                             PP3.plan_ext_id AS Plan_Code3,
+                             PP3.pyr_cls_cd AS Payor_Class_3,
+                             PP3.fin_cls_cd AS Financial_Class_3,
+                             PP4.plan_ext_id AS Current_Plan_Code,
+                             PP4.pyr_cls_cd AS Current_Payor_Class,
+                             PP4.fin_cls_cd AS Current_Financial_Class,
+                             CONVERT(DATE, PAT_VISIT.adm_ts) AS Date_Admit,
+                             CONVERT(DATE, PAT_VISIT.dschrg_ts) AS Date_Discharge,
+                             CONVERT(DATE, BINV.billing_date) AS Billing_Date,
+                             PAT_VISIT.pat_ty AS Patient_Type,
+                             '' AS Billing_Category, /* blank at this point */
+                             MST1.cod_dtl_ds AS Visit_Status,
+                             MST2.cod_dtl_ds AS Agency_Code,
+                             ISNULL(CAST(BINV.ttl_charges_billed_at AS MONEY), 0)
+                                    - ISNULL(CAST(BINV.ins_adj_at AS MONEY), 0)
+                                    - ISNULL(CAST(BINV.pat_adj_at AS MONEY), 0)
+                                    - ISNULL(CAST(BINV.pat_pay_at AS MONEY), 0)
+                                    - ISNULL(CAST(BINV.ins_pay_at AS MONEY), 0) AS AccountBalance,
+                             RTRIM( PAT_VISIT.vst_ext_id ) AS VisitID
+                      FROM 
+                             paragon.dbo.TPB200_BILLING_INVOICE BINV
+                      LEFT JOIN 
+                             paragon.dbo.TPB311_IVO_PAYOR IP1
+                                    ON BINV.ivo_int_id = IP1.ivo_int_id 
+                                           AND IP1.pyr_seq_no = '4981'
+                      LEFT JOIN 
+                             paragon.dbo.TPB311_IVO_PAYOR IP2
+                                    ON BINV.ivo_int_id = IP2.ivo_int_id
+                                           AND IP2.pyr_seq_no = '4978'
+                      LEFT JOIN 
+                             paragon.dbo.TPB311_IVO_PAYOR IP3
+                                    ON BINV.ivo_int_id = IP3.ivo_int_id
+                                           AND IP3.pyr_seq_no = '4980'
+                      LEFT JOIN 
+                             paragon.dbo.TPM700_PAYOR_PLAN PP1
+                                    ON PP1.plan_int_id = IP1.plan_int_id
+                                           AND IP1.pyr_seq_no = '4981'
+                      LEFT JOIN 
+                             paragon.dbo.TPM700_PAYOR_PLAN PP2
+                                    ON PP2.plan_int_id = IP2.plan_int_id
+                                           AND IP2.pyr_seq_no = '4978'
+                      LEFT JOIN 
+                             paragon.dbo.TPM700_PAYOR_PLAN PP3
+                                    ON PP3.plan_int_id = IP3.plan_int_id
+                                           AND IP3.pyr_seq_no = '4980'
+                      INNER JOIN 
+                             paragon.dbo.TPM300_PAT_VISIT PAT_VISIT
+                                    ON BINV.vst_int_id = PAT_VISIT.vst_int_id
+                    AND BINV.ar_collection_stat = '5195'
+                      LEFT JOIN 
+                             paragon.dbo.TSM180_MST_COD_DTL MST1
+                                    ON MST1.cod_dtl_int_id = BINV.ar_collection_stat
+                                           AND MST1.cod_hdr_int_id = '87'
+                      LEFT JOIN 
+                             paragon.dbo.TSM180_MST_COD_DTL MST2
+                                    ON MST2.cod_dtl_int_id = BINV.agent_int_id
+                                           AND MST2.cod_hdr_int_id = '320'
+                      INNER JOIN 
+                             paragon.dbo.TPM700_PAYOR_PLAN PP4
+                                    ON BINV.cur_pln_int_id = PP4.plan_int_id
+                      
+                      WHERE BINV.agent_int_id = '40456'
+                                    AND PP4.pyr_cls_cd NOT IN ('21607','21786','21792','21797','21798','25467')
