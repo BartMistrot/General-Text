@@ -1,87 +1,76 @@
--- Agent Codes              cod_hdr_int_id = 320 Cod_dtl_int_id = 40456  HBCS
--- Visit Status             cod_hdr_int_id = 87         Cod_dtl_int_id = 5195       Billed
--- Financial Class          cod_hdr_int_id = 24
--- Payor Class              Cod_dtl_int_id = 119 Cod_dtl_int_id = 25467  Self Pay
--- Payor Class              Cod_dtl_int_id = 119 Cod_dtl_int_id = 21786  Medicaid Outreach
--- Payor Class              Cod_dtl_int_id = 119 Cod_dtl_int_id = 21607  Hospice
--- Payor Class              Cod_dtl_int_id = 119 Cod_dtl_int_id = 21792  Private Pay
--- Payor Class              Cod_dtl_int_id = 119 Cod_dtl_int_id = 21797  Workers Comp
--- Payor Class              Cod_dtl_int_id = 119 Cod_dtl_int_id = 21798  Litigation
-
-paragon.dbo.TPB200_BILLING_INVOICE.svc_from_dt
-paragon.dbo.TPB200_BILLING_INVOICE.svc_thru_dt
-
 SELECT 
-                             BINV.ivo_ext_id AS Invoice_ID,
-                             IP1.certificate_no AS Coverage_ID_1, /* certificate no by primary seconday etc */
-                             IP2.certificate_no AS Coverage_ID_2,
-                             IP3.certificate_no AS Coverage_ID_3,
-                             PP1.plan_ext_id AS Plan_Code1,
-                             PP1.pyr_cls_cd AS Payor_Class_1,
-                             PP1.fin_cls_cd AS Financial_Class_1,
-                             PP2.plan_ext_id AS Plan_Code2,
-                             PP2.pyr_cls_cd AS Payor_Class_2,
-                             PP2.fin_cls_cd AS Financial_Class_2,
-                             PP3.plan_ext_id AS Plan_Code3,
-                             PP3.pyr_cls_cd AS Payor_Class_3,
-                             PP3.fin_cls_cd AS Financial_Class_3,
-                             PP4.plan_ext_id AS Current_Plan_Code,
-                             PP4.pyr_cls_cd AS Current_Payor_Class,
-                             PP4.fin_cls_cd AS Current_Financial_Class,
-                             CONVERT(DATE, PAT_VISIT.adm_ts) AS Date_Admit,
-                             CONVERT(DATE, PAT_VISIT.dschrg_ts) AS Date_Discharge,
-                             CONVERT(DATE, BINV.billing_date) AS Billing_Date,
-                             PAT_VISIT.pat_ty AS Patient_Type,
-                             '' AS Billing_Category, /* blank at this point */
-                             MST1.cod_dtl_ds AS Visit_Status,
-                             MST2.cod_dtl_ds AS Agency_Code,
-                             ISNULL(CAST(BINV.ttl_charges_billed_at AS MONEY), 0)
-                                    - ISNULL(CAST(BINV.ins_adj_at AS MONEY), 0)
-                                    - ISNULL(CAST(BINV.pat_adj_at AS MONEY), 0)
-                                    - ISNULL(CAST(BINV.pat_pay_at AS MONEY), 0)
-                                    - ISNULL(CAST(BINV.ins_pay_at AS MONEY), 0) AS AccountBalance,
-                             RTRIM( PAT_VISIT.vst_ext_id ) AS VisitID
-                      FROM 
-                             paragon.dbo.TPB200_BILLING_INVOICE BINV
-                      LEFT JOIN 
-                             paragon.dbo.TPB311_IVO_PAYOR IP1
-                                    ON BINV.ivo_int_id = IP1.ivo_int_id 
-                                           AND IP1.pyr_seq_no = '4981'
-                      LEFT JOIN 
-                             paragon.dbo.TPB311_IVO_PAYOR IP2
-                                    ON BINV.ivo_int_id = IP2.ivo_int_id
-                                           AND IP2.pyr_seq_no = '4978'
-                      LEFT JOIN 
-                             paragon.dbo.TPB311_IVO_PAYOR IP3
-                                    ON BINV.ivo_int_id = IP3.ivo_int_id
-                                           AND IP3.pyr_seq_no = '4980'
-                      LEFT JOIN 
-                             paragon.dbo.TPM700_PAYOR_PLAN PP1
-                                    ON PP1.plan_int_id = IP1.plan_int_id
-                                           AND IP1.pyr_seq_no = '4981'
-                      LEFT JOIN 
-                             paragon.dbo.TPM700_PAYOR_PLAN PP2
-                                    ON PP2.plan_int_id = IP2.plan_int_id
-                                           AND IP2.pyr_seq_no = '4978'
-                      LEFT JOIN 
-                             paragon.dbo.TPM700_PAYOR_PLAN PP3
-                                    ON PP3.plan_int_id = IP3.plan_int_id
-                                           AND IP3.pyr_seq_no = '4980'
-                      INNER JOIN 
-                             paragon.dbo.TPM300_PAT_VISIT PAT_VISIT
-                                    ON BINV.vst_int_id = PAT_VISIT.vst_int_id
-                    AND BINV.ar_collection_stat = '5195'
-                      LEFT JOIN 
-                             paragon.dbo.TSM180_MST_COD_DTL MST1
-                                    ON MST1.cod_dtl_int_id = BINV.ar_collection_stat
-                                           AND MST1.cod_hdr_int_id = '87'
-                      LEFT JOIN 
-                             paragon.dbo.TSM180_MST_COD_DTL MST2
-                                    ON MST2.cod_dtl_int_id = BINV.agent_int_id
-                                           AND MST2.cod_hdr_int_id = '320'
-                      INNER JOIN 
-                             paragon.dbo.TPM700_PAYOR_PLAN PP4
-                                    ON BINV.cur_pln_int_id = PP4.plan_int_id
-                      
-                      WHERE BINV.agent_int_id = '40456'
-                                    AND PP4.pyr_cls_cd NOT IN ('21607','21786','21792','21797','21798','25467')
+    BINV.ivo_ext_id AS Invoice_ID,
+    IP1.certificate_no AS Coverage_ID_1, /* certificate no by primary secondary etc */
+    IP2.certificate_no AS Coverage_ID_2,
+    IP3.certificate_no AS Coverage_ID_3,
+    PP1.plan_ext_id AS Plan_Code1,
+    PP1.pyr_cls_cd AS Payor_Class_1,
+    PP1.fin_cls_cd AS Financial_Class_1,
+    PP2.plan_ext_id AS Plan_Code2,
+    PP2.pyr_cls_cd AS Payor_Class_2,
+    PP2.fin_cls_cd AS Financial_Class_2,
+    PP3.plan_ext_id AS Plan_Code3,
+    PP3.pyr_cls_cd AS Payor_Class_3,
+    PP3.fin_cls_cd AS Financial_Class_3,
+    PP4.plan_ext_id AS Current_Plan_Code,
+    PP4.pyr_cls_cd AS Current_Payor_Class,
+    PP4.fin_cls_cd AS Current_Financial_Class,
+    CONVERT(DATE, PAT_VISIT.adm_ts) AS Date_Admit,
+    CONVERT(DATE, PAT_VISIT.dschrg_ts) AS Date_Discharge,
+    CONVERT(DATE, BINV.billing_date) AS Billing_Date,
+    PAT_VISIT.pat_ty AS Patient_Type,
+    '' AS Billing_Category, /* blank at this point */
+    MST1.cod_dtl_ds AS Visit_Status,
+    MST2.cod_dtl_ds AS Agency_Code,
+    ISNULL(CAST(BINV.ttl_charges_billed_at AS MONEY), 0)
+        - ISNULL(CAST(BINV.ins_adj_at AS MONEY), 0)
+        - ISNULL(CAST(BINV.pat_adj_at AS MONEY), 0)
+        - ISNULL(CAST(BINV.pat_pay_at AS MONEY), 0)
+        - ISNULL(CAST(BINV.ins_pay_at AS MONEY), 0) AS AccountBalance,
+    RTRIM(PAT_VISIT.vst_ext_id) AS VisitID,
+    BINV.svc_from_dt AS Service_From_Date,
+    BINV.svc_thru_dt AS Service_Through_Date
+FROM 
+    paragon.dbo.TPB200_BILLING_INVOICE BINV
+LEFT JOIN 
+    paragon.dbo.TPB311_IVO_PAYOR IP1
+    ON BINV.ivo_int_id = IP1.ivo_int_id 
+    AND IP1.pyr_seq_no = '4981'
+LEFT JOIN 
+    paragon.dbo.TPB311_IVO_PAYOR IP2
+    ON BINV.ivo_int_id = IP2.ivo_int_id
+    AND IP2.pyr_seq_no = '4978'
+LEFT JOIN 
+    paragon.dbo.TPB311_IVO_PAYOR IP3
+    ON BINV.ivo_int_id = IP3.ivo_int_id
+    AND IP3.pyr_seq_no = '4980'
+LEFT JOIN 
+    paragon.dbo.TPM700_PAYOR_PLAN PP1
+    ON PP1.plan_int_id = IP1.plan_int_id
+    AND IP1.pyr_seq_no = '4981'
+LEFT JOIN 
+    paragon.dbo.TPM700_PAYOR_PLAN PP2
+    ON PP2.plan_int_id = IP2.plan_int_id
+    AND IP2.pyr_seq_no = '4978'
+LEFT JOIN 
+    paragon.dbo.TPM700_PAYOR_PLAN PP3
+    ON PP3.plan_int_id = IP3.plan_int_id
+    AND IP3.pyr_seq_no = '4980'
+INNER JOIN 
+    paragon.dbo.TPM300_PAT_VISIT PAT_VISIT
+    ON BINV.vst_int_id = PAT_VISIT.vst_int_id
+    AND BINV.ar_collection_stat = '5195'
+LEFT JOIN 
+    paragon.dbo.TSM180_MST_COD_DTL MST1
+    ON MST1.cod_dtl_int_id = BINV.ar_collection_stat
+    AND MST1.cod_hdr_int_id = '87'
+LEFT JOIN 
+    paragon.dbo.TSM180_MST_COD_DTL MST2
+    ON MST2.cod_dtl_int_id = BINV.agent_int_id
+    AND MST2.cod_hdr_int_id = '320'
+INNER JOIN 
+    paragon.dbo.TPM700_PAYOR_PLAN PP4
+    ON BINV.cur_pln_int_id = PP4.plan_int_id
+WHERE 
+    BINV.agent_int_id = '40456'
+    AND PP4.pyr_cls_cd NOT IN ('21607','21786','21792','21797','21798','25467')
