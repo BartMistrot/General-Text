@@ -1,1 +1,189 @@
+-- Agent Codes		cod_hdr_int_id = 320	cod_dtl_int_id = 40456	HBCS
+-- Visit Status		cod_hdr_int_id = 87		cod_dtl_int_id = 5195	Billed
+-- Patient Type		cod_hdr_int_id = 39
+-- Financial Class	cod_hdr_int_id = 24
+-- Service Code		cod_hdr_int_id = 52
+-- VIP Flag			cod_hdr_int_id = 61
+-- Payor Class		cod_hdr_int_id = 119	cod_dtl_int_id = 25467	Self Pay
+-- Payor Class		cod_hdr_int_id = 119	cod_dtl_int_id = 21786	Medicaid Outreach
+-- Payor Class		cod_hdr_int_id = 119	cod_dtl_int_id = 21607	Hospice
+-- Payor Class		cod_hdr_int_id = 119	cod_dtl_int_id = 21792	Private Pay
+-- Payor Class		cod_hdr_int_id = 119	cod_dtl_int_id = 21797	Workers Comp
+-- Payor Class		cod_hdr_int_id = 119	cod_dtl_int_id = 21798	Litigation
 
+-- Extract Parameters
+-- Visit Status Billed
+-- Billing Date -45 Days (Use Date Range of -44 to -45
+-- Account Balance $100-$3000
+-- Agency Code is Not Valued [NULL]
+-- Payor Class Exclude Self Pay, Medicaid Outreach, Hospice, Private Pay, Workers Comp & Litigation
+-- 
+--
+-- Note:  Paragon_GuarantorDemoraphics file requires additional field PAT_VISIT.vst.int.id to satisfy Join with TPM350_VISIT_GUARANTOR
+--		  Paragon_Charges file requires additional field PAT_VISIT.vst.int.id to satisfy Join with TPB105_CHARGE_DETAIL
+--		  Paragon_FinancialTansactions file requires additional field PAT_VISIT.vst.int.id to satisfy Join with TPB110_PMT_ADJ_DETAIL
+--		  Paragon_PrimaryCoverage file requires additional field PAT_VISIT.vst.int.id to satisfy Join with TPM311_VISIT_PAYOR
+--		  Paragon_SecondaryCoverage file requires additional field PAT_VISIT.vst.int.id to satisfy Join with TPM311_VISIT_PAYOR
+--		  Paragon_TertiaryCoverage file requires additional field PAT_VISIT.vst.int.id to satisfy Join with TPM311_VISIT_PAYOR
+
+
+
+-- Drop temporary tables if they exist
+IF OBJECT_ID('tempdb..#TempInvoices') IS NOT NULL
+    DROP TABLE #TempInvoices;
+
+IF OBJECT_ID('tempdb..#TempHBCSInvoices') IS NOT NULL
+    DROP TABLE #TempHBCSInvoices;
+
+DECLARE @DateFilter1 AS DATE = DATEADD(DAY, -45, CONVERT(DATE, GETDATE()));
+DECLARE @DateFilter2 AS DATE = DATEADD(DAY, -44, CONVERT(DATE, GETDATE()));
+
+-- Create #TempInvoices table
+SELECT DISTINCT
+    BINV.ivo_ext_id AS Invoice_ID,
+    RTRIM(PAT_VISIT.vst_ext_id) AS Visit_ID,
+    PATNAME.man_int_id AS Patient_EPN,
+    PGUA.guar_int_id AS Guarantor_EPN,
+    ISNULL(CAST(BINV.ttl_charges_billed_at AS MONEY), 0)
+        - ISNULL(CAST(BINV.ins_adj_at AS MONEY), 0)
+        - ISNULL(CAST(BINV.pat_adj_at AS MONEY), 0)
+        - ISNULL(CAST(BINV.pat_pay_at AS MONEY), 0)
+        - ISNULL(CAST(BINV.ins_pay_at AS MONEY), 0) AS AccountBalance,
+    ISNULL((PP4.plan_ext_id), '') AS Current_Plan_Code,
+    ISNULL((MSTCPC.cod_dtl_ds), '') AS Current_Payor_Class,
+    ISNULL((MSTCFC.cod_dtl_ds), '') AS Current_Financial_Class,
+    ISNULL((PP1.plan_ext_id), '') AS Primary_Plan_Code,
+    ISNULL((IP1.certificate_no), '') AS Primary_Certificate_ID,
+    ISNULL((MSTPPC.cod_dtl_ds), '') AS Primary_Payor_Class,
+    ISNULL((MSTPFC.cod_dtl_ds), '') AS Primary_Financial_Class,
+    ISNULL((PP2.plan_ext_id), '') AS Secondary_Plan_Code,
+    ISNULL((IP2.certificate_no), '') AS Secondary_Certificate_ID,
+    ISNULL((MSTSPC.cod_dtl_ds), '') AS Secondary_Payor_Class,
+    ISNULL((MSTSFC.cod_dtl_ds), '') AS Secondary_Financial_Class,
+    ISNULL((PP3.plan_ext_id), '') AS Tertiary_Plan_Code,
+    ISNULL((IP3.certificate_no), '') AS Tertiary_Certificate_ID,
+    ISNULL((MSTTPC.cod_dtl_ds), '') AS Tertiary_Payor_Class,
+    ISNULL((MSTTFC.cod_dtl_ds), '') AS Tertiary_Financial_Class,
+    ISNULL((CONVERT(CHAR, BINV.billing_date, 101)), '') AS Billing_Date,
+    CONVERT(DATE, BINV.svc_from_dt) AS Service_From_Date,
+    CONVERT(DATE, BINV.svc_thru_dt) AS Service_Through_Date,
+    ISNULL((MST1.cod_dtl_ds), '') AS Visit_Status,
+    ISNULL((MST2.cod_dtl_ds), '') AS Agency_Code,
+    ISNULL((MST3.cod_dtl_ds), '') AS Patient_Type,
+    ISNULL((MST.cod_dtl_ext_id), '') AS Location_ID,
+    ISNULL((MST.cod_dtl_ds), '') AS Location_Description,
+    ISNULL((MSTVIP.cod_dtl_ds), '') AS VIP_Flag,
+    ISNULL((SUBSTRING(PN.patient_note, 57, 6)), '') AS Denial_Note_Flag,
+    ISNULL((FIRST_VALUE(CONVERT(VARCHAR, PN.note_date, 101)) OVER (PARTITION BY BINV.ivo_ext_id ORDER BY PN.note_date)), '') AS Denial_Note_Date,
+    PAT_VISIT.vst_int_id AS Internal_Visit_ID
+INTO #TempInvoices
+FROM paragon.dbo.TPB200_BILLING_INVOICE BINV
+LEFT JOIN paragon.dbo.TPB311_IVO_PAYOR IP1
+    ON BINV.ivo_int_id = IP1.ivo_int_id
+    AND IP1.pyr_seq_no = '4981'
+LEFT JOIN paragon.dbo.TPB311_IVO_PAYOR IP2
+    ON BINV.ivo_int_id = IP2.ivo_int_id
+    AND IP2.pyr_seq_no = '4978'
+LEFT JOIN paragon.dbo.TPB311_IVO_PAYOR IP3
+    ON BINV.ivo_int_id = IP3.ivo_int_id
+    AND IP3.pyr_seq_no = '4980'
+LEFT JOIN paragon.dbo.TPM700_PAYOR_PLAN PP1
+    ON PP1.plan_int_id = IP1.plan_int_id
+    AND IP1.pyr_seq_no = '4981'
+LEFT JOIN paragon.dbo.TPM700_PAYOR_PLAN PP2
+    ON PP2.plan_int_id = IP2.plan_int_id
+    AND IP2.pyr_seq_no = '4978'
+LEFT JOIN paragon.dbo.TPM700_PAYOR_PLAN PP3
+    ON PP3.plan_int_id = IP3.plan_int_id
+    AND IP3.pyr_seq_no = '4980'
+INNER JOIN paragon.dbo.TPM300_PAT_VISIT PAT_VISIT
+    ON BINV.vst_int_id = PAT_VISIT.vst_int_id
+INNER JOIN paragon.dbo.TPM700_PAYOR_PLAN PP4
+    ON BINV.cur_pln_int_id = PP4.plan_int_id
+LEFT JOIN paragon.dbo.TSM180_MST_COD_DTL MST1
+    ON MST1.cod_dtl_int_id = BINV.ar_collection_stat
+    AND MST1.cod_hdr_int_id = '87'
+LEFT JOIN paragon.dbo.TSM180_MST_COD_DTL MST2
+    ON MST2.cod_dtl_int_id = BINV.agent_int_id
+    AND MST2.cod_hdr_int_id = '320'
+LEFT JOIN paragon.dbo.TSM180_MST_COD_DTL MST3
+    ON MST3.cod_dtl_int_id = PAT_VISIT.pat_ty
+    AND MST3.cod_hdr_int_id = '39'
+LEFT JOIN paragon.dbo.TSM180_MST_COD_DTL MSTPPC
+    ON MSTPPC.cod_dtl_int_id = PP1.pyr_cls_cd
+    AND MSTPPC.cod_hdr_int_id = '119'
+LEFT JOIN paragon.dbo.TSM180_MST_COD_DTL MSTSPC
+    ON MSTSPC.cod_dtl_int_id = PP2.pyr_cls_cd
+    AND MSTSPC.cod_hdr_int_id = '119'
+LEFT JOIN paragon.dbo.TSM180_MST_COD_DTL MSTTPC
+    ON MSTTPC.cod_dtl_int_id = PP3.pyr_cls_cd
+    AND MSTTPC.cod_hdr_int_id = '119'
+LEFT JOIN paragon.dbo.TSM180_MST_COD_DTL MSTPFC
+    ON MSTPFC.cod_dtl_int_id = PP1.fin_cls_cd
+    AND MSTPFC.cod_hdr_int_id = '24'
+LEFT JOIN paragon.dbo.TSM180_MST_COD_DTL MSTSFC
+    ON MSTSFC.cod_dtl_int_id = PP2.fin_cls_cd
+    AND MSTSFC.cod_hdr_int_id = '24'
+LEFT JOIN paragon.dbo.TSM180_MST_COD_DTL MSTTFC
+    ON MSTTFC.cod_dtl_int_id = PP3.fin_cls_cd
+    AND MSTTFC.cod_hdr_int_id = '24'
+LEFT JOIN paragon.dbo.TSM180_MST_COD_DTL MSTCPC
+    ON MSTCPC.cod_dtl_int_id = PP4.pyr_cls_cd
+    AND MSTCPC.cod_hdr_int_id = '119'
+LEFT JOIN paragon.dbo.TSM180_MST_COD_DTL MSTCFC
+    ON MSTCFC.cod_dtl_int_id = PP4.fin_cls_cd
+    AND MSTCFC.cod_hdr_int_id = '24'
+INNER JOIN paragon.dbo.TSM180_MST_COD_DTL MST
+    ON BINV.svc_cd_int_id = MST.cod_dtl_int_id
+    AND MST.cod_hdr_int_id = '52'
+LEFT JOIN (
+    SELECT 
+        GUA.vst_int_id,
+        GUA.guar_int_id,
+        P.dth_ts,
+        GUA.lst_mod_ts
+    FROM paragon.dbo.TPM350_VISIT_GUARANTOR GUA
+    LEFT JOIN paragon.dbo.TSM040_PERSON_HDR P
+        ON GUA.guar_int_id = P.psn_int_id
+    WHERE GUA.guar_seq_no = 4981
+) PGUA
+ON PGUA.vst_int_id = PAT_VISIT.vst_int_id
+INNER JOIN (
+    SELECT 
+        P.man_int_id,
+        P.dth_ts,
+        P.lst_nm,
+        P.vip_prf_cd,
+        P.lst_mod_ts
+    FROM 
+        paragon.dbo.TSM040_PERSON_HDR P
+    WHERE 
+        P.man_int_id = P.psn_int_id
+) PATNAME
+    ON PATNAME.man_int_id = PAT_VISIT.man_int_id
+LEFT JOIN 
+    paragon.dbo.TSM180_MST_COD_DTL MSTVIP
+    ON MSTVIP.cod_dtl_int_id = PATNAME.vip_prf_cd
+    AND MSTVIP.cod_hdr_int_id = '61'
+LEFT JOIN paragon.dbo.TSM310_PATIENT_NOTES PN 
+    ON PN.vst_int_id = PAT_VISIT.vst_int_id
+    AND SUBSTRING(PN.patient_note, 57, 6) = 'DENIAL'
+WHERE 
+    (PP4.pyr_cls_cd NOT IN ('21607','21786','21792','21797','21798','25467')
+    AND BINV.ar_collection_stat = '5195'
+    AND (BINV.billing_date >= CAST(@DateFilter1 AS DATE) 
+    AND BINV.billing_date <= CAST (@DateFilter2 AS DATE))
+    AND BINV.agent_int_id is NULL
+    AND PAT_VISIT.org_int_id IN (278))
+    OR BINV.agent_int_id = '40456'
+
+-- Create #TempHBCSInvoices table
+SELECT DISTINCT * 	
+INTO #TempHBCSInvoices
+FROM #TempInvoices	
+WHERE AccountBalance >= 100.00 AND AccountBalance <= 3000.00 
+
+-- Final select to display the result
+SELECT DISTINCT * 
+FROM #TempHBCSInvoices		
+ORDER BY Invoice_ID ASC
