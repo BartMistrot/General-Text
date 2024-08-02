@@ -1,33 +1,3 @@
--- Agent Codes		cod_hdr_int_id = 320	cod_dtl_int_id = 40456	HBCS
--- Visit Status		cod_hdr_int_id = 87		cod_dtl_int_id = 5195	Billed
--- Patient Type		cod_hdr_int_id = 39
--- Financial Class	cod_hdr_int_id = 24
--- Service Code		cod_hdr_int_id = 52
--- VIP Flag			cod_hdr_int_id = 61
--- Payor Class		cod_hdr_int_id = 119	cod_dtl_int_id = 25467	Self Pay
--- Payor Class		cod_hdr_int_id = 119	cod_dtl_int_id = 21786	Medicaid Outreach
--- Payor Class		cod_hdr_int_id = 119	cod_dtl_int_id = 21607	Hospice
--- Payor Class		cod_hdr_int_id = 119	cod_dtl_int_id = 21792	Private Pay
--- Payor Class		cod_hdr_int_id = 119	cod_dtl_int_id = 21797	Workers Comp
--- Payor Class		cod_hdr_int_id = 119	cod_dtl_int_id = 21798	Litigation
-
--- Extract Parameters
--- Visit Status Billed
--- Billing Date -45 Days (Use Date Range of -44 to -45
--- Account Balance $100-$3000
--- Agency Code is Not Valued [NULL]
--- Payor Class Exclude Self Pay, Medicaid Outreach, Hospice, Private Pay, Workers Comp & Litigation
--- 
---
--- Note:  Paragon_GuarantorDemoraphics file requires additional field PAT_VISIT.vst.int.id to satisfy Join with TPM350_VISIT_GUARANTOR
---		  Paragon_Charges file requires additional field PAT_VISIT.vst.int.id to satisfy Join with TPB105_CHARGE_DETAIL
---		  Paragon_FinancialTansactions file requires additional field PAT_VISIT.vst.int.id to satisfy Join with TPB110_PMT_ADJ_DETAIL
---		  Paragon_PrimaryCoverage file requires additional field PAT_VISIT.vst.int.id to satisfy Join with TPM311_VISIT_PAYOR
---		  Paragon_SecondaryCoverage file requires additional field PAT_VISIT.vst.int.id to satisfy Join with TPM311_VISIT_PAYOR
---		  Paragon_TertiaryCoverage file requires additional field PAT_VISIT.vst.int.id to satisfy Join with TPM311_VISIT_PAYOR
-
-
-
 -- Drop temporary tables if they exist
 IF OBJECT_ID('tempdb..#TempInvoices') IS NOT NULL
     DROP TABLE #TempInvoices;
@@ -38,6 +8,7 @@ IF OBJECT_ID('tempdb..#TempHBCSInvoices') IS NOT NULL
 DECLARE @DateFilter1 AS DATE = DATEADD(DAY, -45, CONVERT(DATE, GETDATE()));
 DECLARE @DateFilter2 AS DATE = DATEADD(DAY, -44, CONVERT(DATE, GETDATE()));
 
+-- Create #TempInvoices table
 SELECT DISTINCT
     BINV.ivo_ext_id AS Invoice_ID,
     RTRIM(PAT_VISIT.vst_ext_id) AS Visit_ID,
@@ -154,12 +125,12 @@ INNER JOIN (
         P.man_int_id,
         P.dth_ts,
         P.lst_nm,
-    	P.vip_prf_cd,
-    	P.lst_mod_ts
-FROM 
-    paragon.dbo.TSM040_PERSON_HDR P
-WHERE 
-    P.man_int_id = P.psn_int_id
+        P.vip_prf_cd,
+        P.lst_mod_ts
+    FROM 
+        paragon.dbo.TSM040_PERSON_HDR P
+    WHERE 
+        P.man_int_id = P.psn_int_id
 ) PATNAME
     ON PATNAME.man_int_id = PAT_VISIT.man_int_id
 LEFT JOIN 
@@ -178,16 +149,13 @@ WHERE
     AND PAT_VISIT.org_int_id IN (278))
     OR BINV.agent_int_id = '40456'
 
+-- Create #TempHBCSInvoices table
 SELECT DISTINCT * 	
 INTO #TempHBCSInvoices
 FROM #TempInvoices	
 WHERE AccountBalance >= 100.00 AND AccountBalance <= 3000.00 
 
-SELECT DISTINCT * FROM #TempHBCSInvoices		
+-- Final select to display the result
+SELECT DISTINCT * 
+FROM #TempHBCSInvoices		
 ORDER BY Invoice_ID ASC
-
-
-
-
-SELECT DISTINCT * FROM #TempHBCSInvoices		
-		ORDER BY Invoice_ID ASC
