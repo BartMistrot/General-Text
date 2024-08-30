@@ -1,5 +1,15 @@
 Please place an edit on the Aetna Better Health claims F86 to flag the biller if there is no CPT/HCPCS on the claim according to the attached requirement from Aetna Better Health.   Thanks. 
 
+Hey [Coworker’s Name],
+
+I just wrote a new bridge routine for our Aetna Better Health claims and wanted to run it by you before we put it live. Basically, Aetna has this new rule where certain revenue codes have to have a CPT or HCPCS code, otherwise the claim could get denied or they might take back the payment later.
+
+What I did was set up the routine to first filter out only the Aetna claims. Then it checks if the claim has any of those specific revenue codes that Aetna cares about. If it finds one without a corresponding CPT/HCPCS code, it flags the claim with an error. This way, the biller gets a heads-up to fix it before the claim goes out.
+
+Can you take a quick look and let me know if I missed anything? Just want to make sure everything’s covered.
+
+Thanks!
+
 
 # SR9001 - AETNA BETTER HEALTH - MISSING CPT/HCPCS FLAG
 # CREATED BY [YOUR NAME], [DATE]
