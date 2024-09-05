@@ -94,3 +94,14 @@ Remove the OMIT statement – OMIT actually omits the entire claim from the rout
 # FLAG THE CLAIM FOR BILLER REVIEW IF MISSING CPT/HCPCS
 /FUNC=ADDERR(SL_RCODE,"MISSING CPT/HCPCS CODE FOR THIS REVENUE CODE",Y)
 
+
+
+
+
+Amanda,
+
+For Dr. Udoh he has required special access priveledges in the past no other physician here has currently required before which means that he would require a special new role created for physicians that may fall into his situation in the future. Our secuirty policies here dictate that we cannot issue user specific access and everything has to be done via role based assignments and currently no other physician has required the access permissions for everything dr. udoh currently has required. This includes the prior sepsis patient queue previously created as that would need to be updated into his new role that would be created for physicians in a similar role.
+
+In order for me to properly assist dr. udoh and you with these requests we would need an official justification written up for what his role is, why he needs these permissions, what facilities he is regularly working in, a list of his roles and permissions required to perform his job without inhibiting any of his duties, and any other important information you may feel is necessary for his special circumstance. 
+
+Once our team has this information we can send it to our access control group and have a new physician role created for physicians that fall under his specific circumstances. As it currently stands in order for dr udoh to get access to every and any file type we would have to give all physicians access to them and that would violate our security policies for the "least privilidge" priciple which keeps our organization safe.
