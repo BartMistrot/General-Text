@@ -17,23 +17,35 @@ BEGIN
             WHERE ackDateTime < DATEADD(HOUR, -1, GETDATE())
         )
         BEGIN
-            -- Prepare and send the email alert
+            -- Prepare the email alert body
             DECLARE @xml NVARCHAR(MAX);
             DECLARE @body NVARCHAR(MAX);
 
-            SET @xml = CAST((
+            -- Create the HTML body with all the fields included
+            SET @xml = CAST(( 
                 SELECT
                     [msgID] AS 'td','',
                     [activityOccured] AS 'td','',
                     [transitDateTime] AS 'td','',
                     [transmitDateTime] AS 'td','',
                     [ackDateTime] AS 'td','',
-                    [status] AS 'td',''
+                    [docsizeKB] AS 'td','',
+                    [status] AS 'td','',
+                    [duid] AS 'td','',
+                    [msgType] AS 'td','',
+                    [docType] AS 'td','',
+                    [mrn] AS 'td','',
+                    [facility] AS 'td','',
+                    [encounter] AS 'td','',
+                    [udi] AS 'td','',
+                    [activity] AS 'td','',
+                    [event] AS 'td',''
                 FROM #temp
                 FOR XML PATH('tr'), ELEMENTS
             ) AS NVARCHAR(MAX));
 
-            SET @body = '<html><body><H3>OneContent DEX Monitor Error Alert</H3>
+            -- Prepare the HTML body of the email
+            SET @body = '<html><body><H3>JobStream Monitor Error Alert</H3>
             <table border="1">
                 <tr>
                     <th>msgID</th>
@@ -41,29 +53,133 @@ BEGIN
                     <th>transitDateTime</th>
                     <th>transmitDateTime</th>
                     <th>ackDateTime</th>
+                    <th>docsizeKB</th>
                     <th>status</th>
-                </tr>'
-                + @xml +
+                    <th>duid</th>
+                    <th>msgType</th>
+                    <th>docType</th>
+                    <th>mrn</th>
+                    <th>facility</th>
+                    <th>encounter</th>
+                    <th>udi</th>
+                    <th>activity</th>
+                    <th>event</th>
+                </tr>' 
+                + @xml + 
             '</table></body></html>';
 
+            -- Send the email using Database Mail with the correct recipients
             EXEC msdb.dbo.sp_send_dbmail
                 @profile_name = 'GHSMAIL',
-                @recipients = 'IS-DBA@brgeneral.onmicrosoft.com',
+                @recipients = 'IS-DBA@brgeneral.onmicrosoft.com;servicedesk@brgeneral.org;is-revenue-cycle@brgeneral.org',
                 @body = @body,
-                @body_format ='HTML',
+                @body_format = 'HTML',
                 @subject = 'Please create a P2 and assign to BRG-REV - SOC - DEX File latency Detected';
         END
         ELSE
         BEGIN
-            -- ackDateTime is within the last hour; no action needed
+            -- If ackDateTime is within the last hour, do nothing
             SELECT 0;
         END
     END
     ELSE
     BEGIN
-        -- No records found within the last hour; no action needed
+        -- No records found within the last hour, do nothing
         SELECT 0;
     END
 
+    -- Cleanup temporary table
+    DROP TABLE #temp;
+END
+
+
+------------------------------------------------   TEST  --------------------------------
+
+CREATE PROCEDURE dbo.dex_file_latency_threshold_exceeded AS
+BEGIN
+    -- Select the most recent record within the last hour based on transitdatetime
+    SELECT TOP 1 *
+    INTO #temp
+    FROM DEX_JMS_FC..dex_monitor
+    WHERE transitdatetime > DATEADD(HOUR, -1, GETDATE())
+    ORDER BY transitdatetime DESC;
+
+    -- Check if any record was found
+    IF EXISTS (SELECT 1 FROM #temp)
+    BEGIN
+        -- Check if ackDateTime is more than 1 hour old
+        IF EXISTS (
+            SELECT 1
+            FROM #temp
+            WHERE ackDateTime < DATEADD(HOUR, -1, GETDATE())
+        )
+        BEGIN
+            -- Prepare the email content (to be output as a message for testing)
+            DECLARE @xml NVARCHAR(MAX);
+            DECLARE @body NVARCHAR(MAX);
+
+            -- Create the HTML body with all the fields included
+            SET @xml = CAST(( 
+                SELECT
+                    [msgID] AS 'td','',
+                    [activityOccured] AS 'td','',
+                    [transitDateTime] AS 'td','',
+                    [transmitDateTime] AS 'td','',
+                    [ackDateTime] AS 'td','',
+                    [docsizeKB] AS 'td','',
+                    [status] AS 'td','',
+                    [duid] AS 'td','',
+                    [msgType] AS 'td','',
+                    [docType] AS 'td','',
+                    [mrn] AS 'td','',
+                    [facility] AS 'td','',
+                    [encounter] AS 'td','',
+                    [udi] AS 'td','',
+                    [activity] AS 'td','',
+                    [event] AS 'td',''
+                FROM #temp
+                FOR XML PATH('tr'), ELEMENTS
+            ) AS NVARCHAR(MAX));
+
+            -- Prepare the HTML body of the email (to be output as a message)
+            SET @body = '<html><body><H3>JobStream Monitor Error Alert</H3>
+            <table border="1">
+                <tr>
+                    <th>msgID</th>
+                    <th>activityOccured</th>
+                    <th>transitDateTime</th>
+                    <th>transmitDateTime</th>
+                    <th>ackDateTime</th>
+                    <th>docsizeKB</th>
+                    <th>status</th>
+                    <th>duid</th>
+                    <th>msgType</th>
+                    <th>docType</th>
+                    <th>mrn</th>
+                    <th>facility</th>
+                    <th>encounter</th>
+                    <th>udi</th>
+                    <th>activity</th>
+                    <th>event</th>
+                </tr>'
+                + @xml + 
+            '</table></body></html>';
+
+            -- Output the email content as a result set (instead of sending email)
+            SELECT @body AS EmailBody;
+        END
+        ELSE
+        BEGIN
+            -- ackDateTime is within the last hour; no action needed
+            SELECT 'No action needed, ackDateTime is within the last hour.' AS Message;
+        END
+    END
+    ELSE
+    BEGIN
+        -- No records found within the last hour
+        SELECT 'No records found within the last hour.' AS Message;
+    END
+
+    -- Cleanup temporary table
     DROP TABLE #temp;
 END
