@@ -93,10 +93,11 @@ BEGIN
         -- Step 2: Analyze the ackDateTime of the selected record
         DECLARE @message VARCHAR(50);
         DECLARE @ackDateTime DATETIME;
+        DECLARE @thresholdTime DATETIME;
+
         SELECT @ackDateTime = ackDateTime FROM #temp_top1;
 
         -- Define the threshold time (e.g., 30 seconds ago for testing)
-        DECLARE @thresholdTime DATETIME;
         SET @thresholdTime = DATEADD(SECOND, -30, GETDATE());
 
         -- Compare ackDateTime with the threshold
@@ -109,11 +110,13 @@ BEGIN
             SET @message = 'Not expired';
         END
 
-        -- Return the message and the selected record
-        SELECT @message AS Message;
-
-        SELECT *
-        FROM #temp_top1;
+        -- Return the message, comparison values, and the selected record
+        SELECT 
+            @message AS Message,
+            @ackDateTime AS AckDateTime,
+            @thresholdTime AS ThresholdTime,
+            t.*
+        FROM #temp_top1 t;
 
         -- Clean up temporary table
         DROP TABLE #temp_top1;
@@ -124,6 +127,7 @@ BEGIN
         SELECT 'No records found within the last hour.' AS Message;
     END
 END
+
 
 
 
