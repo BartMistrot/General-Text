@@ -69,3 +69,35 @@ SET @body ='<html><body><H3>JobStream Monitor Error Alert</H3> <table border = 1
 SET @body = @body + @xml +'</table></body></html>' EXEC msdb.dbo.sp_send_dbmail @profile_name = 'GHSMAIL', @recipients = 'IS-DBA@brgeneral.onmicrosoft.com',--;servicedesk@brgeneral.org;is-revenue-cycle@brgeneral.org', @body = @body, @body_format ='HTML', @subject = 'Please create a P2 and assign to BRG-REV - SOC - DEX File latency
 
 Detected'; end else select 0 drop table #temp
+
+
+
+------------------------
+
+
+CREATE PROCEDURE dbo.dex_file_latency_threshold_exceeded AS
+BEGIN
+    -- Select the most recent record
+    SELECT TOP 1 *
+    INTO #temp
+    FROM DEX_JMS_FC..dex_monitor
+    ORDER BY ackDateTime DESC
+
+    -- Check if ackDateTime is more than 30 seconds old
+    IF EXISTS (
+        SELECT 1 FROM #temp
+        WHERE ackDateTime < DATEADD(SECOND, -30, GETDATE())
+    )
+    BEGIN
+        -- Return the text message "expired"
+        SELECT 'expired' AS Message
+    END
+    ELSE
+    BEGIN
+        -- Return a message indicating that everything is fine
+        SELECT 'Not expired' AS Message
+    END
+
+    DROP TABLE #temp
+END
+
