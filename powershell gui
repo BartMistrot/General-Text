@@ -53,15 +53,20 @@ $label.AutoSize = $true
 # Add the label to the form
 $form.Controls.Add($label)
 
-# Position the label centered above the button after the form loads
-$form.Add_Shown({
-    # Force the controls to be created and sizes determined
-    $null = $button.Handle
-    $null = $label.Handle
+# Use the Load event to position the label after the form and controls are fully initialized
+$form.Add_Load({
+    # Force layout to ensure sizes are updated
+    $form.PerformLayout()
+
+    # Access Width and Height correctly
+    $buttonWidth = $button.Size.Width
+    $labelWidth = $label.Size.Width
+    $buttonHeight = $button.Size.Height
+    $labelHeight = $label.Size.Height
 
     # Calculate the X coordinate to center the label above the button
-    $labelX = $button.Location.X + ($button.Width - $label.Width) / 2
-    $labelY = $button.Location.Y - $label.Height - 5  # Position 5 pixels above the button
+    $labelX = $button.Location.X + ($buttonWidth - $labelWidth) / 2
+    $labelY = $button.Location.Y - $labelHeight - 5  # Position 5 pixels above the button
 
     # Set the label's location
     $label.Location = New-Object System.Drawing.Point([int]$labelX, [int]$labelY)
