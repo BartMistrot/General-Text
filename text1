@@ -77,37 +77,81 @@ Detected'; end else select 0 drop table #temp
 
 
 
+
 BEGIN
-    -- Select all records from dex_monitor
+    -- Step 1: Select all records from dex_monitor into #temp
     SELECT *
     INTO #temp
-    FROM DEX_JMS_FC..dex_monitor
-
-    DECLARE @message VARCHAR(50)
-
-    -- Check if the most recent ackDateTime is older than 30 seconds
-    IF EXISTS (
-        SELECT 1
-        FROM #temp
-        WHERE ackDateTime = (SELECT MAX(ackDateTime) FROM #temp)
-          AND ackDateTime < DATEADD(SECOND, -30, GETDATE())
-    )
+    FROM DEX_JMS_FC..dex_monitor;
+    
+    -- Output Step 1 data
+    PRINT 'Step 1: All data from dex_monitor';
+    SELECT *
+    FROM #temp;
+    
+    -- Step 2: Filter records where ackDateTime is not NULL
+    SELECT *
+    INTO #temp_step2
+    FROM #temp
+    WHERE ackDateTime IS NOT NULL;
+    
+    -- Output Step 2 data
+    PRINT 'Step 2: Records where ackDateTime is not NULL';
+    SELECT *
+    FROM #temp_step2;
+    
+    -- Step 3: Order records by ackDateTime descending
+    SELECT *
+    INTO #temp_step3
+    FROM #temp_step2
+    ORDER BY ackDateTime DESC;
+    
+    -- Output Step 3 data
+    PRINT 'Step 3: Records ordered by ackDateTime descending';
+    SELECT *
+    FROM #temp_step3;
+    
+    -- Step 4: Select the top 1 record (latest ackDateTime)
+    SELECT TOP 1 *
+    INTO #temp_step4
+    FROM #temp_step3;
+    
+    -- Output Step 4 data
+    PRINT 'Step 4: Latest record based on ackDateTime';
+    SELECT *
+    FROM #temp_step4;
+    
+    -- Step 5: Check if the latest ackDateTime is older than 30 seconds
+    DECLARE @message VARCHAR(50);
+    DECLARE @latestAckDateTime DATETIME;
+    SELECT @latestAckDateTime = ackDateTime FROM #temp_step4;
+    
+    DECLARE @thresholdTime DATETIME;
+    SET @thresholdTime = DATEADD(SECOND, -30, GETDATE());
+    
+    IF @latestAckDateTime < @thresholdTime
     BEGIN
-        SET @message = 'expired'
+        SET @message = 'expired';
     END
     ELSE
     BEGIN
-        SET @message = 'Not expired'
+        SET @message = 'Not expired';
     END
-
+    
+    -- Output Step 5 data
+    PRINT 'Step 5: Comparison of latest ackDateTime with threshold';
+    PRINT 'Latest ackDateTime: ' + CONVERT(VARCHAR(30), @latestAckDateTime, 120);
+    PRINT 'Threshold time (30 seconds ago): ' + CONVERT(VARCHAR(30), @thresholdTime, 120);
+    PRINT 'Result: ' + @message;
+    
     -- Return the message
-    SELECT @message AS Message
-
-    -- Return the full query result
-    SELECT *
-    FROM #temp
-
-    DROP TABLE #temp
+    SELECT @message AS Message;
+    
+    -- Clean up temporary tables
+    DROP TABLE #temp;
+    DROP TABLE #temp_step2;
+    DROP TABLE #temp_step3;
+    DROP TABLE #temp_step4;
 END
 
 
