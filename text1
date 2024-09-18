@@ -78,80 +78,78 @@ Detected'; end else select 0 drop table #temp
 
 
 
+CREATE PROCEDURE dbo.dex_file_latency_threshold_exceeded AS
 BEGIN
-    -- Step 1: Select all records from dex_monitor into #temp
+    -- Step 1: Select records from dex_monitor within the last hour based on transitdatetime
     SELECT *
-    INTO #temp
-    FROM DEX_JMS_FC..dex_monitor;
-    
+    INTO #temp_initial
+    FROM DEX_JMS_FC..dex_monitor
+    WHERE transitdatetime > DATEADD(HOUR, -1, GETDATE());
+
     -- Output Step 1 data
-    PRINT 'Step 1: All data from dex_monitor';
+    PRINT 'Step 1: Records from dex_monitor within the last hour';
     SELECT *
-    FROM #temp;
-    
-    -- Step 2: Filter records where ackDateTime is not NULL
-    SELECT *
-    INTO #temp_step2
-    FROM #temp
-    WHERE ackDateTime IS NOT NULL;
-    
-    -- Output Step 2 data
-    PRINT 'Step 2: Records where ackDateTime is not NULL';
-    SELECT *
-    FROM #temp_step2;
-    
-    -- Step 3: Order records by ackDateTime descending
-    SELECT *
-    INTO #temp_step3
-    FROM #temp_step2
-    ORDER BY ackDateTime DESC;
-    
-    -- Output Step 3 data
-    PRINT 'Step 3: Records ordered by ackDateTime descending';
-    SELECT *
-    FROM #temp_step3;
-    
-    -- Step 4: Select the top 1 record (latest ackDateTime)
-    SELECT TOP 1 *
-    INTO #temp_step4
-    FROM #temp_step3;
-    
-    -- Output Step 4 data
-    PRINT 'Step 4: Latest record based on ackDateTime';
-    SELECT *
-    FROM #temp_step4;
-    
-    -- Step 5: Check if the latest ackDateTime is older than 30 seconds
-    DECLARE @message VARCHAR(50);
-    DECLARE @latestAckDateTime DATETIME;
-    SELECT @latestAckDateTime = ackDateTime FROM #temp_step4;
-    
-    DECLARE @thresholdTime DATETIME;
-    SET @thresholdTime = DATEADD(SECOND, -30, GETDATE());
-    
-    IF @latestAckDateTime < @thresholdTime
+    FROM #temp_initial;
+
+    -- Check if any records exist
+    IF EXISTS (SELECT 1 FROM #temp_initial)
     BEGIN
-        SET @message = 'expired';
+        -- Step 2: Order the records by transitdatetime descending and select the top 1
+        SELECT TOP 1 *
+        INTO #temp_top1
+        FROM #temp_initial
+        ORDER BY transitdatetime DESC;
+
+        -- Output Step 2 data
+        PRINT 'Step 2: Top 1 most recent record based on transitdatetime';
+        SELECT *
+        FROM #temp_top1;
+
+        -- Step 3: Analyze the ackDateTime of the top record
+        DECLARE @message VARCHAR(50);
+        DECLARE @ackDateTime DATETIME;
+        SELECT @ackDateTime = ackDateTime FROM #temp_top1;
+
+        -- Define the threshold time (current time minus 30 seconds for testing)
+        DECLARE @thresholdTime DATETIME;
+        SET @thresholdTime = DATEADD(SECOND, -30, GETDATE());
+
+        -- Compare ackDateTime with the threshold
+        IF @ackDateTime < @thresholdTime
+        BEGIN
+            SET @message = 'expired';
+        END
+        ELSE
+        BEGIN
+            SET @message = 'Not expired';
+        END
+
+        -- Output Step 3 data
+        PRINT 'Step 3: Analyze ackDateTime of the top record';
+        PRINT 'ackDateTime: ' + CONVERT(VARCHAR(30), @ackDateTime, 120);
+        PRINT 'Threshold time (30 seconds ago): ' + CONVERT(VARCHAR(30), @thresholdTime, 120);
+        PRINT 'Result: ' + @message;
+
+        -- Return the message
+        SELECT @message AS Message;
+
+        -- Return the top record
+        PRINT 'Final Result: Top 1 most recent record with analysis';
+        SELECT *
+        FROM #temp_top1;
+
+        -- Clean up temporary tables
+        DROP TABLE #temp_initial;
+        DROP TABLE #temp_top1;
     END
     ELSE
     BEGIN
-        SET @message = 'Not expired';
+        PRINT 'No records found within the last hour.';
+        SELECT 'No records found within the last hour.' AS Message;
+
+        -- Clean up temporary table
+        DROP TABLE #temp_initial;
     END
-    
-    -- Output Step 5 data
-    PRINT 'Step 5: Comparison of latest ackDateTime with threshold';
-    PRINT 'Latest ackDateTime: ' + CONVERT(VARCHAR(30), @latestAckDateTime, 120);
-    PRINT 'Threshold time (30 seconds ago): ' + CONVERT(VARCHAR(30), @thresholdTime, 120);
-    PRINT 'Result: ' + @message;
-    
-    -- Return the message
-    SELECT @message AS Message;
-    
-    -- Clean up temporary tables
-    DROP TABLE #temp;
-    DROP TABLE #temp_step2;
-    DROP TABLE #temp_step3;
-    DROP TABLE #temp_step4;
 END
 
 
