@@ -1,0 +1,59 @@
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+
+public class SimpleApp {
+
+    public static void main(String[] args) {
+        // Create the frame
+        JFrame frame = new JFrame("Simple Java App");
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setSize(400, 300);
+        frame.setLayout(new BorderLayout());
+
+        // Create panel to hold the components
+        JPanel panel = new JPanel();
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+        frame.add(panel, BorderLayout.CENTER);
+
+        // Create the button in the middle
+        JButton button = new JButton("Click Me");
+        button.setAlignmentX(Component.CENTER_ALIGNMENT);
+        panel.add(Box.createVerticalGlue()); // Adds vertical space above the button
+        panel.add(button);
+        panel.add(Box.createVerticalGlue()); // Adds vertical space below the button
+
+        // Add action listener to the button
+        button.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                // Show dialog box when button is pressed
+                JOptionPane.showMessageDialog(frame, "Hey, I work!");
+            }
+        });
+
+        // Create the scrolling text label
+        JLabel scrollingText = new JLabel("This is scrolling text");
+        scrollingText.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        // Create a timer to update the position of the text
+        Timer timer = new Timer(100, new ActionListener() {
+            private int x = 0;
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                x = (x + 1) % frame.getWidth(); // Scroll the text horizontally
+                scrollingText.setLocation(x, scrollingText.getY());
+            }
+        });
+
+        // Add the scrolling text label to the panel and start the timer
+        panel.add(scrollingText, BorderLayout.NORTH);
+        timer.start();
+
+        // Set the frame to the center of the screen and make it visible
+        frame.setLocationRelativeTo(null);
+        frame.setVisible(true);
+    }
+}
