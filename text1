@@ -75,7 +75,7 @@ Detected'; end else select 0 drop table #temp
 ------------------------
 
 
-CREATE PROCEDURE dbo.dex_file_latency_threshold_exceeded AS
+
 BEGIN
     -- Select the most recent record
     SELECT TOP 1 *
@@ -83,21 +83,29 @@ BEGIN
     FROM DEX_JMS_FC..dex_monitor
     ORDER BY ackDateTime DESC
 
+    DECLARE @message VARCHAR(50)
+
     -- Check if ackDateTime is more than 30 seconds old
     IF EXISTS (
         SELECT 1 FROM #temp
         WHERE ackDateTime < DATEADD(SECOND, -30, GETDATE())
     )
     BEGIN
-        -- Return the text message "expired"
-        SELECT 'expired' AS Message
+        SET @message = 'expired'
     END
     ELSE
     BEGIN
-        -- Return a message indicating that everything is fine
-        SELECT 'Not expired' AS Message
+        SET @message = 'Not expired'
     END
+
+    -- Return the message
+    SELECT @message AS Message
+
+    -- Return the full query result
+    SELECT *
+    FROM #temp
 
     DROP TABLE #temp
 END
+
 
