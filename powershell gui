@@ -1,0 +1,42 @@
+Add-Type -AssemblyName System.Windows.Forms
+
+# Create the form (window)
+$form = New-Object System.Windows.Forms.Form
+$form.Text = "Simple PowerShell App"
+$form.Size = New-Object System.Drawing.Size(400, 300)
+$form.StartPosition = "CenterScreen"
+
+# Create the button in the center
+$button = New-Object System.Windows.Forms.Button
+$button.Text = "Click Me"
+$button.AutoSize = $true
+$button.Location = New-Object System.Drawing.Point(150, 150)
+
+# Add the button to the form
+$form.Controls.Add($button)
+
+# Add the scrolling text label
+$scrollingText = New-Object System.Windows.Forms.Label
+$scrollingText.Text = "This is scrolling text"
+$scrollingText.AutoSize = $true
+$scrollingText.Location = New-Object System.Drawing.Point(50, 50)
+
+# Add the scrolling text to the form
+$form.Controls.Add($scrollingText)
+
+# Define the button click event
+$button.Add_Click({
+    [System.Windows.Forms.MessageBox]::Show("Hey, I work!")
+})
+
+# Timer for scrolling text
+$timer = New-Object System.Windows.Forms.Timer
+$timer.Interval = 100
+
+# Initial x coordinate for the scrolling text
+$x = 0
+
+$timer.Add_Tick({
+    # Increment the x position of the text
+    $x = ($x + 5) % $form.Width
+    $scrolling
