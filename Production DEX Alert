@@ -33,7 +33,7 @@ BEGIN
                 FOR XML PATH('tr'), ELEMENTS
             ) AS NVARCHAR(MAX));
 
-            SET @body = '<html><body><H3>JobStream Monitor Error Alert</H3>
+            SET @body = '<html><body><H3>OneContent DEX Monitor Error Alert</H3>
             <table border="1">
                 <tr>
                     <th>msgID</th>
