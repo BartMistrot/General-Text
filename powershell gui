@@ -39,4 +39,11 @@ $x = 0
 $timer.Add_Tick({
     # Increment the x position of the text
     $x = ($x + 5) % $form.Width
-    $scrolling
+    $scrollingText.Location = New-Object System.Drawing.Point($x, $scrollingText.Location.Y)
+})
+
+# Start the timer
+$timer.Start()
+
+# Show the form
+[void]$form.ShowDialog()
