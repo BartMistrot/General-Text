@@ -1,14 +1,6 @@
 CREATE PROCEDURE dbo.dex_file_latency_threshold_exceeded AS
 BEGIN
-    -- Define the full query as a string
-    DECLARE @query NVARCHAR(MAX) = '
-    SELECT TOP 1 *
-    FROM DEX_JMS_FC..dex_monitor
-    WHERE transitdatetime > DATEADD(HOUR, -1, GETDATE())
-    ORDER BY transitdatetime DESC
-    ';
-    
-    -- Execute the query and store the result in a temporary table
+    -- Select the most recent record within the last hour based on transitdatetime
     SELECT TOP 1 *
     INTO #temp
     FROM DEX_JMS_FC..dex_monitor
@@ -18,45 +10,59 @@ BEGIN
     -- Check if any record was found
     IF EXISTS (SELECT 1 FROM #temp)
     BEGIN
-        -- Get the ackDateTime and define the threshold time
-        DECLARE @ackDateTime DATETIME;
-        DECLARE @thresholdTime DATETIME;
-        DECLARE @message VARCHAR(50);
-
-        SELECT @ackDateTime = ackDateTime FROM #temp;
-        SET @thresholdTime = DATEADD(HOUR, -1, GETDATE());  -- 1 hour threshold for production
-
-        -- For testing purposes, you can adjust the threshold to 30 seconds:
-        -- SET @thresholdTime = DATEADD(SECOND, -30, GETDATE());
-
-        -- Determine if 'expired' or 'not expired'
-        IF @ackDateTime < @thresholdTime
+        -- Check if ackDateTime is more than 1 hour old
+        IF EXISTS (
+            SELECT 1
+            FROM #temp
+            WHERE ackDateTime < DATEADD(HOUR, -1, GETDATE())
+        )
         BEGIN
-            SET @message = 'expired';
+            -- Prepare and send the email alert
+            DECLARE @xml NVARCHAR(MAX);
+            DECLARE @body NVARCHAR(MAX);
+
+            SET @xml = CAST((
+                SELECT
+                    [msgID] AS 'td','',
+                    [activityOccured] AS 'td','',
+                    [transitDateTime] AS 'td','',
+                    [transmitDateTime] AS 'td','',
+                    [ackDateTime] AS 'td','',
+                    [status] AS 'td',''
+                FROM #temp
+                FOR XML PATH('tr'), ELEMENTS
+            ) AS NVARCHAR(MAX));
+
+            SET @body = '<html><body><H3>JobStream Monitor Error Alert</H3>
+            <table border="1">
+                <tr>
+                    <th>msgID</th>
+                    <th>activityOccured</th>
+                    <th>transitDateTime</th>
+                    <th>transmitDateTime</th>
+                    <th>ackDateTime</th>
+                    <th>status</th>
+                </tr>'
+                + @xml +
+            '</table></body></html>';
+
+            EXEC msdb.dbo.sp_send_dbmail
+                @profile_name = 'GHSMAIL',
+                @recipients = 'IS-DBA@brgeneral.onmicrosoft.com',
+                @body = @body,
+                @body_format ='HTML',
+                @subject = 'Please create a P2 and assign to BRG-REV - SOC - DEX File latency Detected';
         END
         ELSE
         BEGIN
-            SET @message = 'not expired';
+            -- ackDateTime is within the last hour; no action needed
+            SELECT 0;
         END
-
-        -- Return the message, comparison data, the full query, and the selected record in one result set
-        SELECT 
-            @message AS Message,
-            @ackDateTime AS AckDateTime,
-            @thresholdTime AS ThresholdTime,
-            @query AS [Query],
-            t.*
-        FROM #temp t;
     END
     ELSE
     BEGIN
-        -- No records found within the last hour
-        DECLARE @thresholdTime DATETIME = DATEADD(HOUR, -1, GETDATE());  -- Ensure @thresholdTime is declared
-        SELECT 
-            'No records found within the last hour.' AS Message,
-            NULL AS AckDateTime,
-            @thresholdTime AS ThresholdTime,
-            @query AS [Query];
+        -- No records found within the last hour; no action needed
+        SELECT 0;
     END
 
     DROP TABLE #temp;
