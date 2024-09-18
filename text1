@@ -56,3 +56,16 @@ encounter        : 000102185139
 udi              : 113620547
 activity         : 1
 event            : T02
+
+
+--------------------------
+
+CREATE PROCEDURE dbo.dex_file_latency_threshold_exceeded AS select top(1) * INTO #temp from DEX_JMS_FC..dex_monitor where transitdatetime > DATEADD(HOUR, -1, GETDATE()) order by transitdatetime desc -- select * from #temp If (select count(status) from #temp)<0 begin select 1 DECLARE @xml NVARCHAR(MAX) DECLARE @body NVARCHAR(MAX)
+
+SET @xml = CAST(( SELECT [msgID] AS 'td','',[activityOccured] AS 'td','', [transitDateTime] AS 'td','', [transmitDateTime] AS 'td','', [ackDateTime] as 'td','', [docsizeKB] as 'td','', [status] as 'td','', [duid] as 'td','', [msgType] as 'td', [docType] as 'td','', [mrn] as 'td','', [facility] as 'td','', [encounter] as 'td','', [udi] as 'td','', [activity] as 'td','', [event] as 'td','' FROM #temp --ORDER BY [name] FOR XML PATH('tr'), ELEMENTS ) AS NVARCHAR(MAX))
+
+SET @body ='<html><body><H3>JobStream Monitor Error Alert</H3> <table border = 1> <tr> <th> msgID </th> <th> activityOccured </th> <th> transitDateTime </th> <th> transmitDateTime </th> <th> ackDateTime </th> <th> status </th></tr>'
+
+SET @body = @body + @xml +'</table></body></html>' EXEC msdb.dbo.sp_send_dbmail @profile_name = 'GHSMAIL', @recipients = 'IS-DBA@brgeneral.onmicrosoft.com',--;servicedesk@brgeneral.org;is-revenue-cycle@brgeneral.org', @body = @body, @body_format ='HTML', @subject = 'Please create a P2 and assign to BRG-REV - SOC - DEX File latency
+
+Detected'; end else select 0 drop table #temp
