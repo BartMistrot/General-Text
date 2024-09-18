@@ -76,19 +76,21 @@ Detected'; end else select 0 drop table #temp
 
 
 
+
 BEGIN
-    -- Select the most recent record
-    SELECT TOP 1 *
+    -- Select all records from dex_monitor
+    SELECT *
     INTO #temp
     FROM DEX_JMS_FC..dex_monitor
-    ORDER BY ackDateTime DESC
 
     DECLARE @message VARCHAR(50)
 
-    -- Check if ackDateTime is more than 30 seconds old
+    -- Check if the most recent ackDateTime is older than 30 seconds
     IF EXISTS (
-        SELECT 1 FROM #temp
-        WHERE ackDateTime < DATEADD(SECOND, -30, GETDATE())
+        SELECT 1
+        FROM #temp
+        WHERE ackDateTime = (SELECT MAX(ackDateTime) FROM #temp)
+          AND ackDateTime < DATEADD(SECOND, -30, GETDATE())
     )
     BEGIN
         SET @message = 'expired'
