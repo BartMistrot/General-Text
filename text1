@@ -1,41 +1,58 @@
-# Define the target machine and service name
-$computerName = "RemoteMachineName"    # Replace with the name or IP address of the remote machine
-$serviceName = "ServiceName"           # Replace with the name of the service you want to check
+# Define the connection parameters
+$server = "GHSMSOCDATA2"          # Replace with your server name
+$username = "GHS_User"            # Replace with your username (if using SQL authentication)
+$password = "Xtr3me#25!"          # Replace with your password (if using SQL authentication)
+
+# Build the connection string
+$connectionString = "Server=$server;User ID=$username;Password=$password;Trusted_Connection=False;"
 
 try {
-    # Retrieve the service status from the remote machine
-    $service = Get-Service -ComputerName $computerName -Name $serviceName -ErrorAction Stop
+    # Create a new SQL Connection object
+    $connection = New-Object System.Data.SqlClient.SqlConnection
+    $connection.ConnectionString = $connectionString
 
-    # Check if the service is running
-    if ($service.Status -eq 'Running') {
-        Write-Host "The service '$($service.DisplayName)' is running on $computerName." -ForegroundColor Green
-    } else {
-        Write-Host "The service '$($service.DisplayName)' is not running on $computerName. Current status: $($service.Status)" -ForegroundColor Yellow
-    }
+    # Open the connection to the database
+    $connection.Open()
+    Write-Host "Connection to the database opened successfully." -ForegroundColor Green
+
+    # SQL query
+    $query = "select top(1) * from DEX_JMS_FC..dex_monitor where transitdatetime > DATEADD(HOUR, -1, GETDATE()) order by transitdatetime desc If (select count(status) from #temp) < 0 begin select 1 SELECT @@VERSION; end" 
+
+    # Create a SQL Command object
+    $command = $connection.CreateCommand()
+    $command.CommandText = $query
+
+    # Execute the query and load the results into a DataTable
+    $dataAdapter = New-Object System.Data.SqlClient.SqlDataAdapter $command
+    $dataTable = New-Object System.Data.DataTable
+    $dataAdapter.Fill($dataTable) | Out-Null
+
+    # Close the connection
+    $connection.Close()
+    Write-Host "Connection to the database closed." -ForegroundColor Green
+
+    # Display the results
+    Write-Host "Query Results:" -ForegroundColor Cyan
+    $dataTable
 }
 catch {
-    Write-Error "An error occurred while trying to access the service '$serviceName' on $computerName. $_"
+    Write-Error "An error occurred: $_"
 }
 
 
-# Define the target machine and service name
-$computerName = "RemoteMachineName"    # Replace with the name or IP address of the remote machine
-$serviceName = "ServiceName"           # Replace with the name of the service you want to check
-
-# Prompt for credentials
-$credential = Get-Credential
-
-try {
-    # Retrieve the service status from the remote machine using the provided credentials
-    $service = Get-Service -ComputerName $computerName -Name $serviceName -Credential $credential -ErrorAction Stop
-
-    # Check if the service is running
-    if ($service.Status -eq 'Running') {
-        Write-Host "The service '$($service.DisplayName)' is running on $computerName." -ForegroundColor Green
-    } else {
-        Write-Host "The service '$($service.DisplayName)' is not running on $computerName. Current status: $($service.Status)" -ForegroundColor Yellow
-    }
-}
-catch {
-    Write-Error "An error occurred while trying to access the service '$serviceName' on $computerName. $_"
-}
+msgID            : EMS25390570_dexOutbound
+activityOccured  : 20240918 11:10:35.000
+transitDateTime  : 9/18/2024 11:10:43 AM
+transmitDateTime : 9/18/2024 11:10:44 AM
+ackDateTime      : 9/18/2024 11:10:44 AM
+docsizeKB        : 53
+status           : Ack received
+duid             : 1.2.840.113782.1.3.1010801.167141.6135.20240918.58233509        
+msgType          : MDM
+docType          : EMERGENCY TRIAGE NOTE P
+mrn              : 05618679
+facility         : BRG
+encounter        : 000102185139
+udi              : 113620547
+activity         : 1
+event            : T02
