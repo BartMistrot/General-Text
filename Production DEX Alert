@@ -1,0 +1,36 @@
+CREATE PROCEDURE dbo.dex_file_latency_threshold_exceeded AS
+BEGIN
+    -- Select the most recent record within the last hour based on transitdatetime
+    SELECT TOP 1 *
+    INTO #temp
+    FROM DEX_JMS_FC..dex_monitor
+    WHERE transitdatetime > DATEADD(HOUR, -1, GETDATE())
+    ORDER BY transitdatetime DESC;
+
+    -- Check if any record was found
+    IF EXISTS (SELECT 1 FROM #temp)
+    BEGIN
+        -- Check if ackDateTime is more than 1 hour old
+        IF EXISTS (
+            SELECT 1
+            FROM #temp
+            WHERE ackDateTime < DATEADD(HOUR, -1, GETDATE())
+        )
+        BEGIN
+            -- Output 'expired' if ackDateTime is over 1 hour old
+            SELECT 'expired' AS Message;
+        END
+        ELSE
+        BEGIN
+            -- Output 'not expired' if ackDateTime is within the last hour
+            SELECT 'not expired' AS Message;
+        END
+    END
+    ELSE
+    BEGIN
+        -- No records found within the last hour
+        SELECT 'No records found within the last hour.' AS Message;
+    END
+
+    DROP TABLE #temp;
+END
