@@ -38,12 +38,34 @@ $x = 0
 
 $timer.Add_Tick({
     # Increment the x position of the text
-    $x = ($x + 5) % $form.Width
-    $scrollingText.Location = New-Object System.Drawing.Point($x, $scrollingText.Location.Y)
+    $x = ($x + 5) % ($form.ClientSize.Width + $scrollingText.Width)
+    $scrollingText.Location = New-Object System.Drawing.Point($form.ClientSize.Width - $x, $scrollingText.Location.Y)
 })
 
 # Start the timer
 $timer.Start()
+
+# Create the label to center above the button
+$label = New-Object System.Windows.Forms.Label
+$label.Text = "Centered Text Above Button"
+$label.AutoSize = $true
+
+# Add the label to the form
+$form.Controls.Add($label)
+
+# Position the label centered above the button after the form loads
+$form.Add_Shown({
+    # Force the controls to be created and sizes determined
+    $null = $button.Handle
+    $null = $label.Handle
+
+    # Calculate the X coordinate to center the label above the button
+    $labelX = $button.Location.X + ($button.Width - $label.Width) / 2
+    $labelY = $button.Location.Y - $label.Height - 5  # Position 5 pixels above the button
+
+    # Set the label's location
+    $label.Location = New-Object System.Drawing.Point([int]$labelX, [int]$labelY)
+})
 
 # Show the form
 [void]$form.ShowDialog()
