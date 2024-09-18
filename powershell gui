@@ -1,6 +1,83 @@
-Method invocation failed because [System.Object[]] does not contain a method named 'op_Subtraction'.
-At C:\Users\bar954\OneDrive - General Health System\Temp\code env check.ps1:42 char:5
-+     $scrollingText.Location = New-Object System.Drawing.Point($form.C ...
-+     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    + CategoryInfo          : InvalidOperation: (op_Subtraction:String) [], RuntimeException
-    + FullyQualifiedErrorId : MethodNotFound
+Add-Type -AssemblyName System.Windows.Forms
+
+# Create the form
+$form = New-Object System.Windows.Forms.Form
+$form.Text = "Simple PowerShell App"
+$form.Size = New-Object System.Drawing.Size(400, 300)
+$form.StartPosition = "CenterScreen"
+
+# Create the button in the center
+$button = New-Object System.Windows.Forms.Button
+$button.Text = "Click Me"
+$button.AutoSize = $true
+
+# Add the button to the form
+$form.Controls.Add($button)
+
+# Define the button click event
+$button.Add_Click({
+    [System.Windows.Forms.MessageBox]::Show("Hey, I work!")
+})
+
+# Add the scrolling text label
+$scrollingText = New-Object System.Windows.Forms.Label
+$scrollingText.Text = "This is scrolling text"
+$scrollingText.AutoSize = $true
+
+# Add the scrolling text to the form
+$form.Controls.Add($scrollingText)
+
+# Create the label to center above the button
+$label = New-Object System.Windows.Forms.Label
+$label.Text = "Centered Text Above Button"
+$label.AutoSize = $true
+
+# Add the label to the form
+$form.Controls.Add($label)
+
+# Position controls after the form is shown
+$form.Add_Shown({
+    # Force layout to ensure sizes are updated
+    $form.PerformLayout()
+    $button.PerformLayout()
+    $label.PerformLayout()
+    $scrollingText.PerformLayout()
+    
+    # Center the button
+    $button.Location = New-Object System.Drawing.Point(
+        ($form.ClientSize.Width - $button.Width) / 2,
+        ($form.ClientSize.Height - $button.Height) / 2
+    )
+
+    # Center the label above the button
+    $label.Location = New-Object System.Drawing.Point(
+        ($form.ClientSize.Width - $label.Width) / 2,
+        $button.Location.Y - $label.Height - 5
+    )
+
+    # Position the scrolling text
+    $scrollingText.Location = New-Object System.Drawing.Point(-$scrollingText.Width, 50)
+})
+
+# Timer for scrolling text
+$timer = New-Object System.Windows.Forms.Timer
+$timer.Interval = 50
+
+# Initial x coordinate for the scrolling text
+$x = -1 * $scrollingText.Width
+
+$timer.Add_Tick({
+    # Increment the x position of the text
+    $x += 5
+    if ($x > $form.ClientSize.Width) {
+        $x = -1 * $scrollingText.Width
+    }
+    # Update the location
+    $scrollingText.Location = New-Object System.Drawing.Point($x, $scrollingText.Location.Y)
+})
+
+# Start the timer
+$timer.Start()
+
+# Show the form
+[void]$form.ShowDialog()
