@@ -16,3 +16,26 @@ try {
 catch {
     Write-Error "An error occurred while trying to access the service '$serviceName' on $computerName. $_"
 }
+
+
+# Define the target machine and service name
+$computerName = "RemoteMachineName"    # Replace with the name or IP address of the remote machine
+$serviceName = "ServiceName"           # Replace with the name of the service you want to check
+
+# Prompt for credentials
+$credential = Get-Credential
+
+try {
+    # Retrieve the service status from the remote machine using the provided credentials
+    $service = Get-Service -ComputerName $computerName -Name $serviceName -Credential $credential -ErrorAction Stop
+
+    # Check if the service is running
+    if ($service.Status -eq 'Running') {
+        Write-Host "The service '$($service.DisplayName)' is running on $computerName." -ForegroundColor Green
+    } else {
+        Write-Host "The service '$($service.DisplayName)' is not running on $computerName. Current status: $($service.Status)" -ForegroundColor Yellow
+    }
+}
+catch {
+    Write-Error "An error occurred while trying to access the service '$serviceName' on $computerName. $_"
+}
