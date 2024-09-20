@@ -211,3 +211,44 @@ Remove Row Filtering (x.rowno = 1) to ensure no rows are suppressed.
 Re-run the Stored Procedure to check if the issue is resolved.
 Reintroduce Filters Gradually to isolate which condition is causing the problem.
 Let me know if any of these steps reveal the source of the issue, or if you need further assistance!
+
+
+
+
+------------------------------------------------
+
+SELECT 
+    oh.entered_datetime_ts,
+    oc.order_code_ext_id,
+    visit.vst_ext_id
+FROM 
+    paragon.dbo.TOM100_ORDER_HEADER oh
+    JOIN paragon.dbo.TOM101_ORDER_DETAIL od ON od.ord_int_id = oh.ord_int_id
+    JOIN paragon.dbo.TPM300_PAT_VISIT visit ON visit.vst_int_id = oh.vst_int_id
+    JOIN paragon.dbo.TOM200_ORDER_CODE oc ON oc.order_code_int_id = od.order_code_int_id
+WHERE 
+    oc.order_code_ext_id IN ('NSGNPO', 'NSGTD5')  -- These are the specific order codes the procedure is looking for
+    AND CAST(oh.entered_datetime_ts AS DATE) = CAST(GETDATE() - 1 AS DATE);  -- Orders entered yesterday
+
+
+entered_datetime_ts	order_code_ext_id	vst_ext_id
+2024-09-18 09:51:00.000	NSGNPO              	000102184760        
+2024-09-18 09:51:00.000	NSGNPO              	000102182801        
+2024-09-18 11:15:00.000	NSGNPO              	000102182978        
+2024-09-18 12:05:00.000	NSGNPO              	000102182726        
+2024-09-18 13:56:00.000	NSGNPO              	000102184743        
+2024-09-18 14:30:00.000	NSGNPO              	000102184338        
+2024-09-18 15:06:00.000	NSGNPO              	000102165593        
+2024-09-18 15:20:00.000	NSGTD5              	000102183160        
+2024-09-18 15:55:00.000	NSGNPO              	000102185201        
+2024-09-18 15:59:00.000	NSGNPO              	000102181131        
+2024-09-18 16:26:00.000	NSGNPO              	000102184625        
+2024-09-18 16:29:00.000	NSGNPO              	000102181618        
+2024-09-18 16:29:00.000	NSGNPO              	000102181618        
+2024-09-18 16:43:00.000	NSGTD5              	000102182734        
+2024-09-18 16:51:00.000	NSGNPO              	000102185323        
+2024-09-18 18:49:00.000	NSGNPO              	000102185197        
+2024-09-18 19:28:00.000	NSGNPO              	000102185505        
+2024-09-18 20:40:00.000	NSGNPO              	000102185306        
+2024-09-18 21:11:24.000	NSGNPO              	000102185640        
+2024-09-18 22:08:00.000	NSGNPO              	000102185640        
