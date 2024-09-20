@@ -97,3 +97,117 @@ FROM
  ) x  
 WHERE  
  x.rowno = 1
+
+
+_------------------------------------------
+
+
+
+. Verify Basic Execution
+First, ensure that the stored procedure runs without parameters. You already executed the procedure using:
+
+sql
+Copy code
+EXEC dbo.usp_brg2_orders_NSGNPO_SSRSReport;
+This is the correct syntax if the procedure doesn't require any parameters. If no errors were shown and only the headers appeared, this confirms that the procedure runs but doesn’t return any rows. Next, we'll investigate why.
+
+2. Check for Data in Related Tables
+A likely reason for only seeing headers is that the underlying data might not meet the filtering conditions in the WHERE clauses of the stored procedure. To troubleshoot, you need to run individual parts of the query.
+
+Step 2.1: Check for Data in the Orders Table (Basic Data Check)
+To check if there is any data in the core table(s), run a simplified version of the SELECT query used in the procedure. Start by removing all filters:
+
+sql
+Copy code
+SELECT TOP 10 
+    oh.entered_datetime_ts,
+    oc.order_code_ext_id,
+    visit.vst_ext_id
+FROM 
+    paragon.dbo.TOM100_ORDER_HEADER oh
+    JOIN paragon.dbo.TOM101_ORDER_DETAIL od ON od.ord_int_id = oh.ord_int_id
+    JOIN paragon.dbo.TPM300_PAT_VISIT visit ON visit.vst_int_id = oh.vst_int_id
+    JOIN paragon.dbo.TOM200_ORDER_CODE oc ON oc.order_code_int_id = od.order_code_int_id;
+This query will help verify if the Orders, Order Details, and Patient Visit tables contain any data.
+
+Step 2.2: Check Specific Conditions Used in the Stored Procedure
+Now, run a more focused query to see if any rows match the conditions used in the stored procedure (such as filtering by NSGNPO order code or by yesterday's date). This is a crucial step to ensure that data exists for the specific conditions the procedure is querying.
+
+sql
+Copy code
+SELECT TOP 10 
+    oh.entered_datetime_ts,
+    oc.order_code_ext_id,
+    visit.vst_ext_id
+FROM 
+    paragon.dbo.TOM100_ORDER_HEADER oh
+    JOIN paragon.dbo.TOM101_ORDER_DETAIL od ON od.ord_int_id = oh.ord_int_id
+    JOIN paragon.dbo.TPM300_PAT_VISIT visit ON visit.vst_int_id = oh.vst_int_id
+    JOIN paragon.dbo.TOM200_ORDER_CODE oc ON oc.order_code_int_id = od.order_code_int_id
+WHERE 
+    oc.order_code_ext_id IN ('NSGNPO', 'NSGTD5')  -- These are the specific order codes the procedure is looking for
+    AND CAST(oh.entered_datetime_ts AS DATE) = CAST(GETDATE() - 1 AS DATE);  -- Orders entered yesterday
+This will help determine whether the specific orders and conditions exist for the date in question.
+
+3. Test the Stored Procedure Without Filters
+You need to determine whether the stored procedure's filters are preventing data from being returned. To test this, run the stored procedure after relaxing or removing the filtering conditions.
+
+Step 3.1: Test Without Date Filter
+Comment out the AND CAST(oh.entered_datetime_ts AS DATE) = CAST(GETDATE() - 1 AS DATE) line to ensure the stored procedure is not restricting results to a particular date. You can temporarily modify the stored procedure if you have permissions:
+
+sql
+Copy code
+-- Original stored procedure logic:
+-- AND CAST(oh.entered_datetime_ts AS DATE) = CAST(GETDATE() - 1 AS DATE)
+
+-- Temporary modification:
+AND CAST(oh.entered_datetime_ts AS DATE) >= '2023-01-01'
+This will ensure you're querying data beyond just "yesterday," in case there were no records for that specific date.
+
+Step 3.2: Test Without Order Code Filter
+Similarly, comment out the oc.order_code_ext_id IN ('NSGNPO', 'NSGTD5') condition to see if the issue is with the filtering by order codes.
+
+sql
+Copy code
+-- Original:
+-- AND oc.order_code_ext_id IN ('NSGNPO', 'NSGTD5')
+
+-- Temporary modification:
+-- Comment this line out or remove it entirely for now
+4. Check for Suppressed Output (Row Filters)
+The stored procedure includes a filter to only return the first row (x.rowno = 1) for each visit. It's possible this filter is unintentionally suppressing rows that would otherwise be returned.
+
+Step 4.1: Remove Row Filter
+To test this, temporarily remove or comment out the row filter in the stored procedure:
+
+sql
+Copy code
+-- Original:
+-- WHERE x.rowno = 1
+
+-- Temporary modification:
+-- Comment this line out or remove it entirely for now
+This will ensure that all rows are returned, not just the first one for each visit.
+
+5. Run the Stored Procedure Again
+After making the above adjustments (such as removing filters), run the stored procedure again to see if it returns data:
+
+sql
+Copy code
+EXEC dbo.usp_brg2_orders_NSGNPO_SSRSReport;
+If it returns data after removing or relaxing the filters, this confirms that one or more of the filters is too restrictive and needs adjustment.
+
+6. Final Debugging
+Once you've identified which part of the query is causing the blank result, you can start narrowing down the conditions:
+
+Reintroduce one filter at a time (e.g., start with the date filter, then add back the order code filter, and finally add back the row filter).
+Check data consistency: Make sure that there is indeed data for the relevant conditions (specific dates, order codes, patient visits, etc.).
+Summary of Steps:
+Verify Basic Execution: Make sure you are executing the procedure correctly with EXEC.
+Check Data in Tables: Run individual queries to check whether data exists in the underlying tables.
+Remove/Relax Filters:
+Remove the date filter and order code filter to see if data is being filtered out unnecessarily.
+Remove Row Filtering (x.rowno = 1) to ensure no rows are suppressed.
+Re-run the Stored Procedure to check if the issue is resolved.
+Reintroduce Filters Gradually to isolate which condition is causing the problem.
+Let me know if any of these steps reveal the source of the issue, or if you need further assistance!
