@@ -1,0 +1,99 @@
+NSGNPO_SSRSReport
+
+  
+/* -----------------------------------------  
+-- Author:  Hardy T. Clark  
+-- Created:  07/14/2023  
+-- Purpose:  Select orders yesterday with NSGNPO order code for bot order mgmt.  
+-- History:  
+-- 07/14/2023 Hardy T Clark Initial Creation. Copied from [usp_brg2_orders_NSGNPO] for SSRS Report/Testing.  
+*/ -----------------------------------------  
+  
+CREATE PROCEDURE [dbo].[usp_brg2_orders_NSGNPO_SSRSReport]    
+AS  
+  
+---------- for testing  --------------------  
+--DECLARE @SchedDt DATETIME = '2022-04-29'  
+--------------------------------------------  
+  
+SELECT  
+ x.*  
+FROM  
+ (  
+  SELECT  
+   --oh.vst_int_id ,  
+   CASE   
+    WHEN (admsvc.cod_dtl_ext_id <> 'M_PRH' AND SUBSTRING(admsvc.cod_dtl_ext_id,1,1) = 'M' AND SUBSTRING(admsvc.cod_dtl_ext_id,5,5) = 'H') THEN 'MC Acute'  
+    WHEN admsvc.cod_dtl_ext_id = 'M_PRH' THEN 'MC'  
+    WHEN (SUBSTRING(admsvc.cod_dtl_ext_id,1,1) = 'M' AND SUBSTRING(admsvc.cod_dtl_ext_id,5,5) <> 'H') THEN 'MC'  
+    WHEN SUBSTRING(admsvc.cod_dtl_ext_id,1,2) = 'zM' THEN 'MC'  
+    WHEN SUBSTRING(admsvc.cod_dtl_ext_id,1,1) = 'B' THEN 'BB'  
+    WHEN SUBSTRING(admsvc.cod_dtl_ext_id,1,1) = 'A' THEN 'ASC'   
+   END AS [Campus]  
+   , TRIM(unit.loc_ds) AS [Unit]  
+   , TRIM(room.loc_ds) AS [Room]  
+   , TRIM(visit.med_rec_no) AS [MRN]  
+   , TRIM(visit.vst_ext_id) AS [Visit ID]  
+   , CONCAT(TRIM(ptpsn.lst_nm),', ',TRIM(ptpsn.fst_nm),' ',ISNULL(TRIM(ptpsn.mid_nm),'')) AS [Patient Name]  
+   , CONVERT(VARCHAR(16),visit.adm_ts,120) AS [Admit Date]  
+   , TRIM(patty.cod_dtl_ds) AS [Pt Type]  
+   --, RTRIM(vststa.cod_dtl_ds) AS [VisitStatus]  
+   , RTRIM(cg.car_gvr_ext_id) AS [Caregiver ID]  
+   , CONCAT(TRIM(cgnm.lst_nm),', ',TRIM(cgnm.fst_nm),' ',ISNULL(TRIM(cgnm.mid_nm),'')) AS [Caregiver Name]  
+     
+   , CONVERT(VARCHAR(16),oh.entered_datetime_ts,120) AS [NSG NPO Order Dt]  
+   , CONVERT(VARCHAR(16),oh.start_datetime_ts,120) AS [NSG NPO Order StartDt]  
+   , oh.order_number AS [NSG NPO Order Nbr]  
+   , RTRIM(oc.order_code_ext_id) AS [NSG NPO Order Cd]  
+   , RTRIM(oc.order_code_desc1) AS [NSG NPO Order]  
+   --, CONCAT(oh.spec_instructions_1,' ',oh.spec_instructions_2,' ',oh.spec_instructions_3) AS [Order Instruction]  
+   , CASE WHEN dtorder.DietOrder IS NULL THEN 'No Order' ELSE TRIM(dtorder.DietOrder) END AS [DTY NPO Order]  
+   , CONVERT(VARCHAR(16),dtorder.DietOrderStartDt,120) AS [DTY NPO Order StartDt]  
+   , CASE WHEN (CAST(dtorder.DietOrderStartDt AS TIME) >= '00:00' AND CAST(dtorder.DietOrderStartDt AS TIME) < '01:00') THEN 'Y' ELSE 'N' END AS [Bot Y/N]  
+   , COUNT(*) OVER(PARTITION BY visit.vst_ext_id ORDER BY visit.vst_ext_id , oh.entered_datetime_ts DESC) AS rowno  
+  FROM   
+   paragon.dbo.TPM300_PAT_VISIT visit  
+   LEFT JOIN paragon.dbo.TSM040_PERSON_HDR ptpsn ON ptpsn.psn_int_id = visit.psn_int_id  
+   LEFT JOIN paragon.dbo.TOM100_ORDER_HEADER oh ON oh.vst_int_id = visit.vst_int_id  
+   LEFT JOIN paragon.dbo.TOM101_ORDER_DETAIL od ON od.ord_int_id = oh.ord_int_id   
+   INNER JOIN paragon.dbo.TOM200_ORDER_CODE oc ON oc.order_code_int_id = od.order_code_int_id  
+   INNER JOIN paragon.dbo.TPM100_CARE_GIVER cg ON cg.car_gvr_int_id = oh.car_gvr_int_id   
+   LEFT JOIN paragon.dbo.TSM040_PERSON_HDR cgnm ON cgnm.psn_int_id = cg.psn_int_id   
+   LEFT JOIN paragon.dbo.TSM180_MST_COD_DTL vststa ON vststa.cod_dtl_int_id = visit.vst_sta_cd  
+   LEFT JOIN paragon.dbo.TSM180_MST_COD_DTL admsvc ON admsvc.cod_dtl_int_id = visit.adm_srv_cd  
+   LEFT JOIN paragon.dbo.TSM180_MST_COD_DTL patty ON patty.cod_dtl_int_id = visit.pat_ty  
+   LEFT JOIN paragon.dbo.TSM950_LOCATION_REF unit ON unit.loc_int_id = visit.loc_lvl_3_id  
+   LEFT JOIN paragon.dbo.TSM950_LOCATION_REF room ON room.loc_int_id = visit.loc_lvl_4_id  
+   OUTER APPLY  
+    (  
+     SELECT TOP 1  
+      dod.vst_int_id , oc.order_code_desc1 AS DietOrder , dod.start_datetime_ts AS DietOrderStartDt   
+     FROM paragon.dbo.TOM103_DIET_ORDER_DETAIL dod   
+      LEFT JOIN paragon.dbo.TOM200_ORDER_CODE oc ON oc.order_code_int_id = dod.order_code_int_id  
+     WHERE   
+      dod.vst_int_id = visit.vst_int_id  
+      AND dod.order_code_int_id IN (1612,17370,1613,17351,12272) --> DIET NPO, DIET NPO AFTER 11pm, DIET NPO AFTER MIDNIGHT, DIET NPO EXCEPT MEDS, DIET NPO UNTIL SWALLOW SCREEN PASS  
+      --AND dod.dtl_sta_cd NOT IN ('D','S','X')     --> D = Discontinue, S = Suspend, X = Canceled   
+      AND dod.start_datetime_ts >= oh.entered_datetime_ts  
+     ORDER BY dod.start_datetime_ts ASC  
+    ) dtorder  
+  WHERE --1=1  
+   visit.org_int_id = 278  
+   AND visit.vst_sta_cd = 4742            --> Admit                                     
+   AND oc.order_code_ext_id IN ('NSGNPO' , 'NSGTD5')      --> Nursing Order NPO After MN , NPO EXCEPT MEDS AFTER MIDNIGHT  
+   AND CAST(oh.entered_datetime_ts AS DATE) = CAST(GETDATE() -1 AS DATE) --> BOT runs at 00:01, only get orders entered yesterday at the 00:01 time.  
+   AND oh.ord_sta_cd NOT IN ('X', 'S', 'D')        --> X = Cancelled, S = Suspeneded, D = Discontinued  
+   AND (ptpsn.lst_nm IN ('TEST','DMR','UPGRADE','WEBSTATION','ZZTEST') AND ptpsn.lst_nm NOT LIKE 'LEAPFROG%')  
+   --AND NOT EXISTS             
+   -- (  
+   --  SELECT dod.vst_int_id  
+   --  FROM paragon.dbo.TOM103_DIET_ORDER_DETAIL dod   
+   --   LEFT JOIN paragon.dbo.TOM200_ORDER_CODE oc ON oc.order_code_int_id = dod.order_code_int_id  
+   --  WHERE dod.vst_int_id = visit.vst_int_id  
+   --   AND dod.order_code_int_id IN (1612,17370,1613,17351,12272) --> DIET NPO, DIET NPO AFTER 11pm, DIET NPO AFTER MIDNIGHT, DIET NPO EXCEPT MEDS, DIET NPO UNTIL SWALLOW SCREEN PASS  
+   --   AND dod.dtl_sta_cd NOT IN ('D','S','X')      --> A = Active, C = Dates Met, D = Discontinue, F = Future, S = Suspend, T = Today, X = Canceled   
+   -- )  
+   --and vst_ext_id = '000101967317'  
+ ) x  
+WHERE  
+ x.rowno = 1
